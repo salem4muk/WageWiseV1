@@ -3,6 +3,10 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { arimo } from './arimo-normal';
+import { arimoBold } from './arimo-bold';
+import { arimoItalic } from './arimo-italic';
+import { arimoBoldItalic } from './arimo-bold-italic';
+
 import type { Employee, ProductionLog, SalaryPayment } from './types';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -16,7 +20,13 @@ interface jsPDFWithAutoTable extends jsPDF {
 
 const addArabicFont = (doc: jsPDF) => {
   doc.addFileToVFS('Arimo-Regular.ttf', arimo);
+  doc.addFileToVFS('Arimo-Bold.ttf', arimoBold);
+  doc.addFileToVFS('Arimo-Italic.ttf', arimoItalic);
+  doc.addFileToVFS('Arimo-BoldItalic.ttf', arimoBoldItalic);
   doc.addFont('Arimo-Regular.ttf', 'Arimo', 'normal');
+  doc.addFont('Arimo-Bold.ttf', 'Arimo', 'bold');
+  doc.addFont('Arimo-Italic.ttf', 'Arimo', 'italic');
+  doc.addFont('Arimo-BoldItalic.ttf', 'Arimo', 'bolditalic');
   doc.setFont('Arimo');
 };
 
@@ -24,9 +34,11 @@ const generateHeader = (doc: jsPDFWithAutoTable, title: string, dateRange: DateR
     const from = format(dateRange.from!, 'yyyy/MM/dd');
     const to = format(dateRange.to!, 'yyyy/MM/dd');
     
-    doc.setFont('Arimo');
+    doc.setFont('Arimo', 'bold');
     doc.setFontSize(20);
     doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    
+    doc.setFont('Arimo', 'normal');
     doc.setFontSize(10);
     doc.text(`الفترة من: ${from} إلى: ${to}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     doc.setFontSize(12);
@@ -58,6 +70,8 @@ const generateProductionReport = (
   const employeeMap = new Map(employees.map(emp => [emp.id, emp.name]));
   const filteredLogs = filterByDateRange(productionLogs, dateRange) as ProductionLog[];
   
+  generateHeader(doc, 'تقرير الإنتاج', dateRange);
+
   let totalCost = 0;
 
   const body = filteredLogs.map(log => {
@@ -69,26 +83,22 @@ const generateProductionReport = (
       log.count.toString(),
       new Date(log.date).toLocaleDateString('ar-EG'),
       employeeMap.get(log.employeeId) || 'موظف محذوف',
-    ];
+    ].reverse();
   });
   
   const totalRow = [
-      { content: formatCurrency(totalCost), styles: { fontStyle: 'bold' } },
       { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: formatCurrency(totalCost), styles: { fontStyle: 'bold', halign: 'right' } },
   ];
   
-  // @ts-ignore
-  body.push(totalRow);
-  
-  generateHeader(doc, 'تقرير الإنتاج', dateRange);
-
   doc.autoTable({
-    head: [['التكلفة', 'العملية', 'الحجم', 'الكمية', 'التاريخ', 'الموظف']],
+    head: [['الموظف', 'التاريخ', 'الكمية', 'الحجم', 'العملية', 'التكلفة']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
-    footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold' },
+    foot: [totalRow],
+    footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'right' },
   });
 };
 
@@ -101,6 +111,8 @@ const generatePaymentsReport = (
   const employeeMap = new Map(employees.map(emp => [emp.id, emp.name]));
   const filteredPayments = filterByDateRange(salaryPayments, dateRange) as SalaryPayment[];
   
+  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
+
   let totalAmount = 0;
 
   const body = filteredPayments.map(payment => {
@@ -110,25 +122,22 @@ const generatePaymentsReport = (
       formatCurrency(payment.amount),
       new Date(payment.date).toLocaleDateString('ar-EG'),
       employeeMap.get(payment.employeeId) || 'موظف محذوف',
-    ];
+    ].reverse();
   });
   
   const totalRow = [
-      { content: formatCurrency(totalAmount), styles: { fontStyle: 'bold' } },
       { content: 'المجموع الإجمالي', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: formatCurrency(totalAmount), styles: { fontStyle: 'bold', halign: 'right' } },
   ];
 
-  // @ts-ignore
-  body.push(totalRow);
-
-  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
-  
   doc.autoTable({
-    head: [['ملاحظات', 'المبلغ', 'التاريخ', 'الموظف']],
+    head: [['الموظف', 'التاريخ', 'المبلغ', 'ملاحظات']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
+    foot: [totalRow],
+    footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'right' },
   });
 };
 
@@ -141,6 +150,8 @@ const generateEmployeeSummaryReport = (
 ) => {
   const filteredLogs = filterByDateRange(productionLogs, dateRange) as ProductionLog[];
   const filteredPayments = filterByDateRange(salaryPayments, dateRange) as SalaryPayment[];
+
+  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
 
   const reportMap = new Map<string, { totalProductionCost: number }>();
   filteredLogs.forEach(log => {
@@ -168,25 +179,22 @@ const generateEmployeeSummaryReport = (
       formatCurrency(totalPayments),
       formatCurrency(productionData.totalProductionCost),
       employee.name,
-    ];
+    ].reverse();
   });
   
   const totalRow = [
-      { content: formatCurrency(totalNetSalary), styles: { fontStyle: 'bold' } },
       { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: formatCurrency(totalNetSalary), styles: { fontStyle: 'bold', halign: 'right' } },
   ];
-  
-  // @ts-ignore
-  body.push(totalRow);
-
-  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
 
   doc.autoTable({
-    head: [['صافي الراتب', 'إجمالي المصروف', 'إجمالي الإنتاج', 'اسم الموظف']],
+    head: [['اسم الموظف', 'إجمالي الإنتاج', 'إجمالي المصروف', 'صافي الراتب']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
+    foot: [totalRow],
+    footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'right' },
   });
 };
 
@@ -200,6 +208,8 @@ export const generatePdf = (
 ) => {
   const doc = new jsPDF() as jsPDFWithAutoTable;
   addArabicFont(doc);
+
+  // Set font for the entire document
   doc.setFont('Arimo');
 
   switch (reportType) {
