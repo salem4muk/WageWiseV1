@@ -126,12 +126,12 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
                         !field.value && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="ms-2 h-4 w-4 opacity-50" />
                       {field.value ? (
                         format(field.value, "PPP", { locale: arSA })
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
+                       <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
