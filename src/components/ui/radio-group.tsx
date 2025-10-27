@@ -15,6 +15,7 @@ const RadioGroup = React.forwardRef<
       className={cn("grid gap-2", className)}
       {...props}
       ref={ref}
+      dir="rtl"
     />
   )
 })
