@@ -205,4 +205,9 @@ export const generatePdf = (
       generatePaymentsReport(doc, dateRange, salaryPayments, employees);
       break;
     case 'employee_summary':
-      generateEmployeeSummaryReport(doc, dateRange, employees, productionLogs, salary
+      generateEmployeeSummaryReport(doc, dateRange, employees, productionLogs, salaryPayments);
+      break;
+  }
+
+  doc.save(`${reportType}_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+};
