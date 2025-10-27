@@ -122,7 +122,7 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-between text-right font-normal",
+                        "w-full justify-start text-right font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -132,7 +132,7 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
-                       <CalendarIcon className="me-2 h-4 w-4 opacity-50" />
+                       <CalendarIcon className="me-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -183,8 +183,8 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
         />
 
         <Button type="submit" className="w-full" disabled={employees.length === 0}>
+           <Save className="ms-2 h-4 w-4"/>
             حفظ السند
-            <Save className="me-2 h-4 w-4"/>
         </Button>
       </form>
     </Form>
