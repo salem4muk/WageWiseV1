@@ -102,7 +102,7 @@ export default function ProductionManagement() {
               <span>إضافة إنتاج جديد</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[525px]">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-headline">
                 {editingLog ? "تعديل سجل إنتاج" : "إضافة إنتاج جديد"}

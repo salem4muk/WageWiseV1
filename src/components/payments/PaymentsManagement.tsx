@@ -93,7 +93,7 @@ export default function PaymentsManagement() {
               <span>إضافة سند جديد</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[525px]">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-headline">
                 {editingPayment ? "تعديل سند صرف" : "إضافة سند صرف جديد"}
