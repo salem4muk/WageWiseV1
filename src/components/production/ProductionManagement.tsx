@@ -37,9 +37,11 @@ export default function ProductionManagement() {
   };
 
   const handleFormSubmit = (values: any) => {
+    const date = values.date.toISOString();
+
     if (editingLog) {
       const updatedLogs = productionLogs.map((log) =>
-        log.id === editingLog.id ? { ...log, ...values, cost: calculateCost(values), date: new Date().toISOString() } : log
+        log.id === editingLog.id ? { ...log, ...values, date, cost: calculateCost(values) } : log
       );
       setProductionLogs(updatedLogs);
       toast({
@@ -49,9 +51,9 @@ export default function ProductionManagement() {
     } else {
       const newLog: ProductionLog = {
         id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        cost: calculateCost(values),
         ...values,
+        date,
+        cost: calculateCost(values),
       };
       setProductionLogs((prev) => [...prev, newLog]);
       toast({

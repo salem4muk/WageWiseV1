@@ -1,7 +1,5 @@
 "use client";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import type { Employee, ProductionLog } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,11 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Save } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Save } from "lucide-react";
 import { useEffect } from "react";
+import type { Employee, ProductionLog } from "@/lib/types";
 
 const productionSchema = z.object({
   employeeId: z.string({ required_error: "الرجاء اختيار موظف." }),
+  date: z.date({ required_error: "الرجاء تحديد تاريخ الإنتاج." }),
   count: z.coerce.number().min(1, { message: "الكمية يجب أن تكون 1 على الأقل." }),
   containerSize: z.enum(["large", "small"], {
     required_error: "يجب اختيار حجم العلبة.",
@@ -49,14 +53,25 @@ interface ProductionFormProps {
 export default function ProductionForm({ employees, onSubmit, initialData }: ProductionFormProps) {
   const form = useForm<ProductionFormValues>({
     resolver: zodResolver(productionSchema),
-    defaultValues: initialData || {
+    defaultValues: initialData 
+    ? { ...initialData, date: new Date(initialData.date) } 
+    : {
       count: 1,
+      date: new Date(),
     },
   });
 
    useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      form.reset({ ...initialData, date: new Date(initialData.date) });
+    } else {
+        form.reset({
+            count: 1,
+            date: new Date(),
+            containerSize: undefined,
+            processType: undefined,
+            employeeId: undefined,
+        })
     }
   }, [initialData, form]);
 
@@ -90,6 +105,48 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                   )}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>تاريخ الإنتاج</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>اختر تاريخًا</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -176,7 +233,7 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
 
         <Button type="submit" className="w-full" disabled={employees.length === 0}>
           <Save className="ms-2 h-4 w-4" />
-          حفظ الإنتاج
+          {initialData ? "حفظ التعديلات" : "حفظ الإنتاج"}
         </Button>
       </form>
     </Form>
