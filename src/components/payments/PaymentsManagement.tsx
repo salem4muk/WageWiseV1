@@ -27,10 +27,12 @@ export default function PaymentsManagement() {
   const { toast } = useToast();
 
   const handleFormSubmit = (values: any) => {
+    const date = values.date.toISOString();
+
     if (editingPayment) {
       // Update existing payment
       const updatedPayments = payments.map((p) =>
-        p.id === editingPayment.id ? { ...p, ...values, date: new Date().toISOString() } : p
+        p.id === editingPayment.id ? { ...p, ...values, date } : p
       );
       setPayments(updatedPayments);
       toast({
@@ -41,8 +43,8 @@ export default function PaymentsManagement() {
       // Add new payment
       const newPayment: SalaryPayment = {
         id: crypto.randomUUID(),
-        date: new Date().toISOString(),
         ...values,
+        date,
       };
       setPayments((prev) => [...prev, newPayment]);
       toast({
@@ -79,7 +81,12 @@ export default function PaymentsManagement() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           إدارة سندات الصرف
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+          setIsDialogOpen(isOpen);
+          if (!isOpen) {
+            setEditingPayment(undefined);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
               <PlusCircle className="ms-2 h-4 w-4" />

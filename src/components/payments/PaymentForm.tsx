@@ -22,11 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Save } from "lucide-react";
+import { Save, Calendar as CalendarIcon } from "lucide-react";
 import { useEffect } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { arSA } from "date-fns/locale";
 
 const paymentSchema = z.object({
   employeeId: z.string({ required_error: "الرجاء اختيار موظف." }),
+  date: z.date({ required_error: "الرجاء تحديد تاريخ الصرف." }),
   amount: z.coerce.number().min(1, { message: "المبلغ يجب أن يكون 1 على الأقل." }),
   notes: z.string().optional(),
 });
@@ -44,18 +50,29 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: initialData ? {
-        employeeId: initialData.employeeId,
-        amount: initialData.amount,
+        ...initialData,
+        date: new Date(initialData.date),
         notes: initialData.notes || "",
     } : {
       amount: 0,
       notes: "",
+      date: new Date(),
     },
   });
 
   useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      form.reset({
+        ...initialData,
+        date: new Date(initialData.date)
+      });
+    } else {
+        form.reset({
+            amount: 0,
+            notes: "",
+            date: new Date(),
+            employeeId: undefined
+        })
     }
   }, [initialData, form]);
 
@@ -88,6 +105,49 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
                   )}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>تاريخ الصرف</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-between text-right font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="ms-2 h-4 w-4 opacity-50" />
+                      {field.value ? (
+                        format(field.value, "PPP", { locale: arSA })
+                      ) : (
+                        <span>اختر تاريخًا</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    locale={arSA}
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
