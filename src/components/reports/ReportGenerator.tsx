@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, FileDown } from "lucide-react";
+import { Calendar as CalendarIcon, FileSearch } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -39,8 +39,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { generatePdf } from "@/lib/pdf-generator";
 import type { Employee, ProductionLog, SalaryPayment } from "@/lib/types";
+
+import ProductionReportTable from "./ProductionReportTable";
+import PaymentsReportTable from "./PaymentsReportTable";
+import EmployeeSummaryReportTable from "./EmployeeSummaryReportTable";
 
 const reportSchema = z.object({
   reportType: z.enum([
@@ -63,19 +66,85 @@ export default function ReportGenerator() {
   const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
   const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
 
+  const [reportData, setReportData] = useState<any[] | null>(null);
+  const [activeReportType, setActiveReportType] = useState<string | null>(null);
+
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
   });
 
-  const onSubmit = (values: ReportFormValues) => {
-    generatePdf(
-      values.reportType,
-      values.dateRange,
-      employees,
-      productionLogs,
-      salaryPayments
-    );
+  const filterByDateRange = (items: (ProductionLog | SalaryPayment)[], dateRange: DateRange) => {
+    const from = dateRange.from!;
+    const to = dateRange.to!;
+    to.setHours(23, 59, 59, 999); // Include the whole end day
+    return items.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= from && itemDate <= to;
+    });
   };
+  
+  const onSubmit = (values: ReportFormValues) => {
+    let data;
+    switch (values.reportType) {
+      case "production":
+        data = filterByDateRange(productionLogs, values.dateRange);
+        break;
+      case "payments":
+        data = filterByDateRange(salaryPayments, values.dateRange);
+        break;
+      case "employee_summary":
+        const filteredLogs = filterByDateRange(productionLogs, values.dateRange) as ProductionLog[];
+        const filteredPayments = filterByDateRange(salaryPayments, values.dateRange) as SalaryPayment[];
+        
+        const reportMap = new Map<string, { totalProductionCost: number, productionCount: number }>();
+        filteredLogs.forEach(log => {
+          const entry = reportMap.get(log.employeeId) || { totalProductionCost: 0, productionCount: 0 };
+          entry.totalProductionCost += log.cost;
+          entry.productionCount += 1;
+          reportMap.set(log.employeeId, entry);
+        });
+
+        const paymentsMap = new Map<string, number>();
+        filteredPayments.forEach(payment => {
+          const currentAmount = paymentsMap.get(payment.employeeId) || 0;
+          paymentsMap.set(payment.employeeId, currentAmount + payment.amount);
+        });
+        
+        data = employees.map(employee => {
+          const productionData = reportMap.get(employee.id) || { totalProductionCost: 0 };
+          const totalPayments = paymentsMap.get(employee.id) || 0;
+          return {
+            employee,
+            totalProductionCost: productionData.totalProductionCost,
+            totalPayments,
+            netSalary: productionData.totalProductionCost - totalPayments,
+          };
+        }).filter(item => item.totalProductionCost > 0 || item.totalPayments > 0);
+        break;
+      default:
+        data = [];
+    }
+    setReportData(data);
+    setActiveReportType(values.reportType);
+  };
+  
+  const renderReport = () => {
+    if (!reportData) {
+      return null;
+    }
+
+    switch (activeReportType) {
+      case 'production':
+        return <ProductionReportTable productionLogs={reportData as ProductionLog[]} employees={employees} />;
+      case 'payments':
+        return <PaymentsReportTable payments={reportData as SalaryPayment[]} employees={employees} />;
+      case 'employee_summary':
+        return <EmployeeSummaryReportTable reportData={reportData} />;
+      default:
+        return null;
+    }
+  }
+
 
   return (
     <div>
@@ -84,14 +153,14 @@ export default function ReportGenerator() {
           منشئ التقارير
         </h1>
         <p className="text-muted-foreground">
-         اختر نوع التقرير والنطاق الزمني لإنشاء ملف PDF.
+         اختر نوع التقرير والنطاق الزمني لعرضه.
         </p>
       </div>
-    <Card>
+    <Card className="mb-8">
       <CardHeader>
         <CardTitle className="font-headline">خيارات التقرير</CardTitle>
         <CardDescription>
-          حدد المعايير لتوليد التقرير المخصص.
+          حدد المعايير لعرض التقرير المخصص.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,6 +175,7 @@ export default function ReportGenerator() {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    dir="rtl"
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -142,15 +212,15 @@ export default function ReportGenerator() {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="ml-2 h-4 w-4" />
+                          <CalendarIcon className="ms-2 h-4 w-4" />
                           {field.value?.from ? (
                             field.value.to ? (
                               <>
-                                {format(field.value.from, "LLL dd, y")} -{" "}
-                                {format(field.value.to, "LLL dd, y")}
+                                {format(field.value.from, "dd/MM/yyyy")} -{" "}
+                                {format(field.value.to, "dd/MM/yyyy")}
                               </>
                             ) : (
-                              format(field.value.from, "LLL dd, y")
+                              format(field.value.from, "dd/MM/yyyy")
                             )
                           ) : (
                             <span>اختر نطاقًا زمنيًا</span>
@@ -175,13 +245,16 @@ export default function ReportGenerator() {
             />
 
             <Button type="submit" className="w-full">
-              <FileDown className="ms-2 h-4 w-4" />
-              إنشاء وتنزيل التقرير
+              <FileSearch className="ms-2 h-4 w-4" />
+              إنشاء التقرير
             </Button>
           </form>
         </Form>
       </CardContent>
     </Card>
+    
+    {renderReport()}
+
     </div>
   );
 }
