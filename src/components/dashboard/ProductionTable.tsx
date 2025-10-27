@@ -21,9 +21,9 @@ const ProductionTable = ({ productionLogs, employees }: ProductionTableProps) =>
   const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-YE", {
       style: "currency",
-      currency: "SAR",
+      currency: "YER",
       minimumFractionDigits: 0,
     }).format(value);
   };

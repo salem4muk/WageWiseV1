@@ -11,9 +11,9 @@ interface SummaryCardsProps {
 
 const SummaryCards = ({ totalCost, totalEmployees, totalProductionEntries }: SummaryCardsProps) => {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-SA", {
+    return new Intl.NumberFormat("ar-YE", {
       style: "currency",
-      currency: "SAR",
+      currency: "YER",
     }).format(value);
   };
 
