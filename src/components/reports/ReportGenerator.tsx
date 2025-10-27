@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
+import { arSA } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileSearch } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
@@ -216,11 +217,11 @@ export default function ReportGenerator() {
                           {field.value?.from ? (
                             field.value.to ? (
                               <>
-                                {format(field.value.from, "dd/MM/yyyy")} -{" "}
-                                {format(field.value.to, "dd/MM/yyyy")}
+                                {format(field.value.from, "dd/MM/yyyy", { locale: arSA })} -{" "}
+                                {format(field.value.to, "dd/MM/yyyy", { locale: arSA })}
                               </>
                             ) : (
-                              format(field.value.from, "dd/MM/yyyy")
+                              format(field.value.from, "dd/MM/yyyy", { locale: arSA })
                             )
                           ) : (
                             <span>اختر نطاقًا زمنيًا</span>
@@ -230,6 +231,7 @@ export default function ReportGenerator() {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
+                        locale={arSA}
                         initialFocus
                         mode="range"
                         defaultMonth={field.value?.from}

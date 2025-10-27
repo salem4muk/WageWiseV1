@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { arSA } from "date-fns/locale";
 import { Calendar as CalendarIcon, Save } from "lucide-react";
 import { useEffect } from "react";
 import type { Employee, ProductionLog } from "@/lib/types";
@@ -127,7 +128,7 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: arSA })
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
@@ -137,6 +138,7 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    locale={arSA}
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
