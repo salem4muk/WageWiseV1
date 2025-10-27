@@ -24,8 +24,13 @@ const generateHeader = (doc: jsPDFWithAutoTable, title: string, dateRange: DateR
     const from = format(dateRange.from!, 'yyyy/MM/dd');
     const to = format(dateRange.to!, 'yyyy/MM/dd');
     
+    // Reverse strings for RTL display in PDF
+    const reversedTitle = title.split('').reverse().join('');
+    const reversedDate = `ot :${to} morf :${from}`.split('').reverse().join('');
+
+
     doc.setFontSize(20);
-    doc.text(title, 105, 15, { align: 'center' });
+    doc.text(reversedTitle, 105, 15, { align: 'center' });
     doc.setFontSize(10);
     doc.text(`الفترة من: ${from} إلى: ${to}`, 105, 22, { align: 'center' });
     doc.setFontSize(12);
@@ -64,24 +69,24 @@ const generateProductionReport = (
   const body = filteredLogs.map(log => {
     totalCost += log.cost;
     return [
-      formatCurrency(log.cost),
-      log.processType === 'blown' ? 'نفخ' : 'لف',
-      log.containerSize === 'large' ? 'كبير' : 'صغير',
-      log.count.toString(),
+      employeeMap.get(log.employeeId) || 'موظف محذوف',
       new Date(log.date).toLocaleDateString('ar-EG'),
-      employeeMap.get(log.employeeId) || 'موظف محذوف'
+      log.count.toString(),
+      log.containerSize === 'large' ? 'كبير' : 'صغير',
+      log.processType === 'blown' ? 'نفخ' : 'لف',
+      formatCurrency(log.cost)
     ];
   });
   
   const totalRow = [
-      formatCurrency(totalCost), 
-      { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'center', fontStyle: 'bold' } }
+      { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'center', fontStyle: 'bold' } },
+      formatCurrency(totalCost)
   ];
   
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['التكلفة', 'العملية', 'الحجم', 'الكمية', 'التاريخ', 'الموظف']],
+    head: [['الموظف', 'التاريخ', 'الكمية', 'الحجم', 'العملية', 'التكلفة']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
@@ -106,23 +111,23 @@ const generatePaymentsReport = (
   const body = filteredPayments.map(payment => {
     totalAmount += payment.amount;
     return [
-      payment.notes || '-',
-      formatCurrency(payment.amount),
-      new Date(payment.date).toLocaleDateString('ar-EG'),
       employeeMap.get(payment.employeeId) || 'موظف محذوف',
+      new Date(payment.date).toLocaleDateString('ar-EG'),
+      formatCurrency(payment.amount),
+      payment.notes || '-',
     ];
   });
   
   const totalRow = [
-      '',
+      { content: 'المجموع الإجمالي', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
       formatCurrency(totalAmount),
-      { content: 'المجموع الإجمالي', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } }
+      ''
   ];
 
   body.push(totalRow);
   
   doc.autoTable({
-    head: [['ملاحظات', 'المبلغ', 'التاريخ', 'الموظف']],
+    head: [['الموظف', 'التاريخ', 'المبلغ', 'ملاحظات']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
@@ -164,22 +169,22 @@ const generateEmployeeSummaryReport = (
     totalNetSalary += netSalary;
     
     return [
-      formatCurrency(netSalary),
-      formatCurrency(totalPayments),
-      formatCurrency(productionData.totalProductionCost),
       employee.name,
+      formatCurrency(productionData.totalProductionCost),
+      formatCurrency(totalPayments),
+      formatCurrency(netSalary),
     ];
   });
   
   const totalRow = [
-      formatCurrency(totalNetSalary),
-      { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } }
+      { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } },
+      formatCurrency(totalNetSalary)
   ];
 
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['صافي الراتب', 'إجمالي المصروف', 'إجمالي الإنتاج', 'اسم الموظف']],
+    head: [['اسم الموظف', 'إجمالي الإنتاج', 'إجمالي المصروف', 'صافي الراتب']],
     body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
