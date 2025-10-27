@@ -24,10 +24,11 @@ const generateHeader = (doc: jsPDFWithAutoTable, title: string, dateRange: DateR
     const from = format(dateRange.from!, 'yyyy/MM/dd');
     const to = format(dateRange.to!, 'yyyy/MM/dd');
     
+    doc.setFont('Arimo');
     doc.setFontSize(20);
-    doc.text(title, 105, 15, { align: 'center' });
+    doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
     doc.setFontSize(10);
-    doc.text(`الفترة من: ${from} إلى: ${to}`, 105, 22, { align: 'center' });
+    doc.text(`الفترة من: ${from} إلى: ${to}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     doc.setFontSize(12);
 };
 
@@ -57,37 +58,38 @@ const generateProductionReport = (
   const employeeMap = new Map(employees.map(emp => [emp.id, emp.name]));
   const filteredLogs = filterByDateRange(productionLogs, dateRange) as ProductionLog[];
   
-  generateHeader(doc, 'تقرير الإنتاج', dateRange);
-
   let totalCost = 0;
 
   const body = filteredLogs.map(log => {
     totalCost += log.cost;
     return [
-      employeeMap.get(log.employeeId) || 'موظف محذوف',
-      new Date(log.date).toLocaleDateString('ar-EG'),
-      log.count.toString(),
-      log.containerSize === 'large' ? 'كبير' : 'صغير',
+      formatCurrency(log.cost),
       log.processType === 'blown' ? 'نفخ' : 'لف',
-      formatCurrency(log.cost)
+      log.containerSize === 'large' ? 'كبير' : 'صغير',
+      log.count.toString(),
+      new Date(log.date).toLocaleDateString('ar-EG'),
+      employeeMap.get(log.employeeId) || 'موظف محذوف',
     ];
   });
   
   const totalRow = [
       { content: formatCurrency(totalCost), styles: { fontStyle: 'bold' } },
-      { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'center', fontStyle: 'bold' } },
+      { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
   ];
   
+  // @ts-ignore
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['الموظف', 'التاريخ', 'الكمية', 'الحجم', 'العملية', 'التكلفة'].reverse()],
-    body: body.map(row => row.reverse()),
+    head: [['التكلفة', 'العملية', 'الحجم', 'الكمية', 'التاريخ', 'الموظف']],
+    body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
-    headStyles: { fillColor: [231, 48, 48] },
+    headStyles: { fillColor: [231, 48, 48], halign: 'right' },
     footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold' },
   });
+  
+  generateHeader(doc, 'تقرير الإنتاج', dateRange);
 };
 
 const generatePaymentsReport = (
@@ -99,35 +101,35 @@ const generatePaymentsReport = (
   const employeeMap = new Map(employees.map(emp => [emp.id, emp.name]));
   const filteredPayments = filterByDateRange(salaryPayments, dateRange) as SalaryPayment[];
   
-  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
-
   let totalAmount = 0;
 
   const body = filteredPayments.map(payment => {
     totalAmount += payment.amount;
     return [
-      employeeMap.get(payment.employeeId) || 'موظف محذوف',
-      new Date(payment.date).toLocaleDateString('ar-EG'),
-      formatCurrency(payment.amount),
       payment.notes || '-',
+      formatCurrency(payment.amount),
+      new Date(payment.date).toLocaleDateString('ar-EG'),
+      employeeMap.get(payment.employeeId) || 'موظف محذوف',
     ];
   });
   
   const totalRow = [
-       '',
-      formatCurrency(totalAmount),
-      { content: 'المجموع الإجمالي', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
+      { content: formatCurrency(totalAmount), styles: { fontStyle: 'bold' } },
+      { content: 'المجموع الإجمالي', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
   ];
 
+  // @ts-ignore
   body.push(totalRow);
   
   doc.autoTable({
-    head: [['الموظف', 'التاريخ', 'المبلغ', 'ملاحظات'].reverse()],
-    body: body.map(row => row.reverse()),
+    head: [['ملاحظات', 'المبلغ', 'التاريخ', 'الموظف']],
+    body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
-    headStyles: { fillColor: [231, 48, 48] },
+    headStyles: { fillColor: [231, 48, 48], halign: 'right' },
   });
+
+  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
 };
 
 const generateEmployeeSummaryReport = (
@@ -137,8 +139,6 @@ const generateEmployeeSummaryReport = (
   productionLogs: ProductionLog[],
   salaryPayments: SalaryPayment[]
 ) => {
-  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
-
   const filteredLogs = filterByDateRange(productionLogs, dateRange) as ProductionLog[];
   const filteredPayments = filterByDateRange(salaryPayments, dateRange) as SalaryPayment[];
 
@@ -164,27 +164,30 @@ const generateEmployeeSummaryReport = (
     totalNetSalary += netSalary;
     
     return [
-      employee.name,
-      formatCurrency(productionData.totalProductionCost),
-      formatCurrency(totalPayments),
       formatCurrency(netSalary),
+      formatCurrency(totalPayments),
+      formatCurrency(productionData.totalProductionCost),
+      employee.name,
     ];
   });
   
   const totalRow = [
-      formatCurrency(totalNetSalary),
-      { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } },
+      { content: formatCurrency(totalNetSalary), styles: { fontStyle: 'bold' } },
+      { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
   ];
-
+  
+  // @ts-ignore
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['اسم الموظف', 'إجمالي الإنتاج', 'إجمالي المصروف', 'صافي الراتب'].reverse()],
-    body: body.map(row => row.reverse()),
+    head: [['صافي الراتب', 'إجمالي المصروف', 'إجمالي الإنتاج', 'اسم الموظف']],
+    body: body,
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
-    headStyles: { fillColor: [231, 48, 48] },
+    headStyles: { fillColor: [231, 48, 48], halign: 'right' },
   });
+
+  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
 };
 
 
