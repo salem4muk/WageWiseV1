@@ -24,13 +24,8 @@ const generateHeader = (doc: jsPDFWithAutoTable, title: string, dateRange: DateR
     const from = format(dateRange.from!, 'yyyy/MM/dd');
     const to = format(dateRange.to!, 'yyyy/MM/dd');
     
-    // Reverse strings for RTL display in PDF
-    const reversedTitle = title.split('').reverse().join('');
-    const reversedDate = `ot :${to} morf :${from}`.split('').reverse().join('');
-
-
     doc.setFontSize(20);
-    doc.text(reversedTitle, 105, 15, { align: 'center' });
+    doc.text(title, 105, 15, { align: 'center' });
     doc.setFontSize(10);
     doc.text(`الفترة من: ${from} إلى: ${to}`, 105, 22, { align: 'center' });
     doc.setFontSize(12);
@@ -79,15 +74,15 @@ const generateProductionReport = (
   });
   
   const totalRow = [
+      { content: formatCurrency(totalCost), styles: { fontStyle: 'bold' } },
       { content: 'المجموع الإجمالي', colSpan: 5, styles: { halign: 'center', fontStyle: 'bold' } },
-      formatCurrency(totalCost)
   ];
   
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['الموظف', 'التاريخ', 'الكمية', 'الحجم', 'العملية', 'التكلفة']],
-    body: body,
+    head: [['الموظف', 'التاريخ', 'الكمية', 'الحجم', 'العملية', 'التكلفة'].reverse()],
+    body: body.map(row => row.reverse()),
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48] },
@@ -119,16 +114,16 @@ const generatePaymentsReport = (
   });
   
   const totalRow = [
-      { content: 'المجموع الإجمالي', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
+       '',
       formatCurrency(totalAmount),
-      ''
+      { content: 'المجموع الإجمالي', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
   ];
 
   body.push(totalRow);
   
   doc.autoTable({
-    head: [['الموظف', 'التاريخ', 'المبلغ', 'ملاحظات']],
-    body: body,
+    head: [['الموظف', 'التاريخ', 'المبلغ', 'ملاحظات'].reverse()],
+    body: body.map(row => row.reverse()),
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48] },
@@ -177,20 +172,21 @@ const generateEmployeeSummaryReport = (
   });
   
   const totalRow = [
+      formatCurrency(totalNetSalary),
       { content: 'إجمالي صافي الرواتب', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } },
-      formatCurrency(totalNetSalary)
   ];
 
   body.push(totalRow);
 
   doc.autoTable({
-    head: [['اسم الموظف', 'إجمالي الإنتاج', 'إجمالي المصروف', 'صافي الراتب']],
-    body: body,
+    head: [['اسم الموظف', 'إجمالي الإنتاج', 'إجمالي المصروف', 'صافي الراتب'].reverse()],
+    body: body.map(row => row.reverse()),
     startY: 30,
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48] },
   });
 };
+
 
 export const generatePdf = (
   reportType: ReportType,
