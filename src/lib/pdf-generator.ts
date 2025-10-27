@@ -79,6 +79,8 @@ const generateProductionReport = (
   
   // @ts-ignore
   body.push(totalRow);
+  
+  generateHeader(doc, 'تقرير الإنتاج', dateRange);
 
   doc.autoTable({
     head: [['التكلفة', 'العملية', 'الحجم', 'الكمية', 'التاريخ', 'الموظف']],
@@ -88,8 +90,6 @@ const generateProductionReport = (
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
     footStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold' },
   });
-  
-  generateHeader(doc, 'تقرير الإنتاج', dateRange);
 };
 
 const generatePaymentsReport = (
@@ -120,6 +120,8 @@ const generatePaymentsReport = (
 
   // @ts-ignore
   body.push(totalRow);
+
+  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
   
   doc.autoTable({
     head: [['ملاحظات', 'المبلغ', 'التاريخ', 'الموظف']],
@@ -128,8 +130,6 @@ const generatePaymentsReport = (
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
   });
-
-  generateHeader(doc, 'تقرير سندات الصرف', dateRange);
 };
 
 const generateEmployeeSummaryReport = (
@@ -179,6 +179,8 @@ const generateEmployeeSummaryReport = (
   // @ts-ignore
   body.push(totalRow);
 
+  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
+
   doc.autoTable({
     head: [['صافي الراتب', 'إجمالي المصروف', 'إجمالي الإنتاج', 'اسم الموظف']],
     body: body,
@@ -186,8 +188,6 @@ const generateEmployeeSummaryReport = (
     styles: { font: 'Arimo', halign: 'right' },
     headStyles: { fillColor: [231, 48, 48], halign: 'right' },
   });
-
-  generateHeader(doc, 'تقرير ملخص رواتب الموظفين', dateRange);
 };
 
 
@@ -200,6 +200,7 @@ export const generatePdf = (
 ) => {
   const doc = new jsPDF() as jsPDFWithAutoTable;
   addArabicFont(doc);
+  doc.setFont('Arimo');
 
   switch (reportType) {
     case 'production':
