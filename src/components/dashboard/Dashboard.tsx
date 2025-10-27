@@ -23,7 +23,7 @@ export default function Dashboard() {
           لوحة التحكم
         </h1>
         <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Link href="/production/add">
+          <Link href="/production">
             <PlusCircle className="ms-2 h-4 w-4" />
             <span>إضافة إنتاج جديد</span>
           </Link>
