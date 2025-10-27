@@ -255,7 +255,7 @@ export default function ReportGenerator() {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                           <CalendarIcon className="me-auto h-4 w-4 opacity-50" />
+                           
                           {field.value?.from ? (
                             field.value.to ? (
                               <>
@@ -268,6 +268,7 @@ export default function ReportGenerator() {
                           ) : (
                             <span>اختر نطاقًا زمنيًا</span>
                           )}
+                           <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
