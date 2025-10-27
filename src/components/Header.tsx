@@ -9,7 +9,7 @@ import { Menu, Settings2 } from "lucide-react";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2">
-    <Settings2 className="h-6 w-6 text-primary" />
+    <Settings2 className="h-7 w-7 text-primary" />
     <span className="font-headline text-2xl font-bold text-primary">
       WageWise
     </span>
