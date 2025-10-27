@@ -86,7 +86,7 @@ export function EmployeeManagement() {
               <span>إضافة موظف جديد</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[525px]">
             <DialogHeader>
               <DialogTitle className="font-headline">
                 {editingEmployee ? "تعديل بيانات موظف" : "إضافة موظف جديد"}
