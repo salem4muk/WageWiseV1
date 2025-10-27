@@ -45,26 +45,26 @@ export default function PaymentsReportTable({ payments, employees }: PaymentsRep
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>الموظف</TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>المبلغ</TableHead>
-              <TableHead>ملاحظات</TableHead>
+              <TableHead className="text-center">الموظف</TableHead>
+              <TableHead className="text-center">التاريخ</TableHead>
+              <TableHead className="text-center">المبلغ</TableHead>
+              <TableHead className="text-center">ملاحظات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedPayments.length > 0 ? (
               sortedPayments.map((payment) => (
                 <TableRow key={payment.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="text-center font-medium">
                     {employeeMap.get(payment.employeeId) || "موظف محذوف"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {new Date(payment.date).toLocaleDateString("ar-EG")}
                   </TableCell>
-                  <TableCell className="font-semibold text-destructive">
+                  <TableCell className="text-center font-semibold text-destructive">
                     {formatCurrency(payment.amount)}
                   </TableCell>
-                  <TableCell>{payment.notes}</TableCell>
+                  <TableCell className="text-center">{payment.notes}</TableCell>
                 </TableRow>
               ))
             ) : (
@@ -77,9 +77,8 @@ export default function PaymentsReportTable({ payments, employees }: PaymentsRep
           </TableBody>
           <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={2} className="font-bold text-lg">المجموع الإجمالي</TableCell>
-                    <TableCell className="font-bold text-lg text-destructive">{formatCurrency(totalAmount)}</TableCell>
-                    <TableCell></TableCell>
+                    <TableCell colSpan={3} className="text-center font-bold text-lg">المجموع الإجمالي</TableCell>
+                    <TableCell className="text-center font-bold text-lg text-destructive">{formatCurrency(totalAmount)}</TableCell>
                 </TableRow>
             </TableFooter>
         </Table>

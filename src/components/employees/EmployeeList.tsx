@@ -34,21 +34,21 @@ export default function EmployeeList({ employees, onEdit, onDelete }: EmployeeLi
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>الاسم</TableHead>
-          <TableHead>معرف الموظف</TableHead>
-          <TableHead>القسم</TableHead>
-          <TableHead>إجراءات</TableHead>
+          <TableHead className="text-center">الاسم</TableHead>
+          <TableHead className="text-center">معرف الموظف</TableHead>
+          <TableHead className="text-center">القسم</TableHead>
+          <TableHead className="text-center">إجراءات</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {employees.length > 0 ? (
           employees.map((employee) => (
             <TableRow key={employee.id}>
-              <TableCell className="font-medium">{employee.name}</TableCell>
-              <TableCell>{employee.employeeId}</TableCell>
-              <TableCell>{employee.department}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="text-center font-medium">{employee.name}</TableCell>
+              <TableCell className="text-center">{employee.employeeId}</TableCell>
+              <TableCell className="text-center">{employee.department}</TableCell>
+              <TableCell className="text-center">
+                <div className="flex gap-2 justify-center">
                   <Button variant="outline" size="icon" onClick={() => onEdit(employee)}>
                     <Edit className="h-4 w-4" />
                   </Button>

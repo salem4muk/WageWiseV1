@@ -50,20 +50,20 @@ export default function EmployeeSummaryReportTable({ reportData }: EmployeeSumma
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>اسم الموظف</TableHead>
-                <TableHead>إجمالي الإنتاج</TableHead>
-                <TableHead>إجمالي المصروف</TableHead>
-                <TableHead className="text-left">صافي الراتب</TableHead>
+                <TableHead className="text-center">اسم الموظف</TableHead>
+                <TableHead className="text-center">إجمالي الإنتاج</TableHead>
+                <TableHead className="text-center">إجمالي المصروف</TableHead>
+                <TableHead className="text-center">صافي الراتب</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedData.length > 0 ? (
                 sortedData.map((data) => (
                   <TableRow key={data.employee.id}>
-                    <TableCell className="font-medium">{data.employee.name}</TableCell>
-                    <TableCell>{formatCurrency(data.totalProductionCost)}</TableCell>
-                    <TableCell className="text-destructive">{formatCurrency(data.totalPayments)}</TableCell>
-                    <TableCell className="text-left font-semibold text-primary">
+                    <TableCell className="text-center font-medium">{data.employee.name}</TableCell>
+                    <TableCell className="text-center">{formatCurrency(data.totalProductionCost)}</TableCell>
+                    <TableCell className="text-center text-destructive">{formatCurrency(data.totalPayments)}</TableCell>
+                    <TableCell className="text-center font-semibold text-primary">
                       {formatCurrency(data.netSalary)}
                     </TableCell>
                   </TableRow>
@@ -78,8 +78,8 @@ export default function EmployeeSummaryReportTable({ reportData }: EmployeeSumma
             </TableBody>
             <TableFooter>
                 <TableRow>
-                    <TableCell colSpan={3} className="font-bold text-lg">المجموع الإجمالي للرواتب الصافية</TableCell>
-                    <TableCell className="text-left font-bold text-lg text-primary">{formatCurrency(totalNetSalaries)}</TableCell>
+                    <TableCell colSpan={3} className="text-center font-bold text-lg">المجموع الإجمالي للرواتب الصافية</TableCell>
+                    <TableCell className="text-center font-bold text-lg text-primary">{formatCurrency(totalNetSalaries)}</TableCell>
                 </TableRow>
             </TableFooter>
           </Table>

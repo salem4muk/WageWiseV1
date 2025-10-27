@@ -47,29 +47,29 @@ export default function PaymentsList({ payments, employees, onEdit, onDelete }: 
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>الموظف</TableHead>
-          <TableHead>التاريخ</TableHead>
-          <TableHead>المبلغ</TableHead>
-          <TableHead>ملاحظات</TableHead>
-          <TableHead>إجراءات</TableHead>
+          <TableHead className="text-center">الموظف</TableHead>
+          <TableHead className="text-center">التاريخ</TableHead>
+          <TableHead className="text-center">المبلغ</TableHead>
+          <TableHead className="text-center">ملاحظات</TableHead>
+          <TableHead className="text-center">إجراءات</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedPayments.length > 0 ? (
           sortedPayments.map((payment) => (
             <TableRow key={payment.id}>
-              <TableCell className="font-medium">
+              <TableCell className="text-center font-medium">
                 {employeeMap.get(payment.employeeId) || "موظف محذوف"}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {new Date(payment.date).toLocaleDateString("ar-EG")}
               </TableCell>
-              <TableCell className="font-semibold text-destructive">
+              <TableCell className="text-center font-semibold text-destructive">
                 {formatCurrency(payment.amount)}
               </TableCell>
-              <TableCell>{payment.notes}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="text-center">{payment.notes}</TableCell>
+              <TableCell className="text-center">
+                <div className="flex gap-2 justify-center">
                   <Button variant="outline" size="icon" onClick={() => onEdit(payment)}>
                     <Edit className="h-4 w-4" />
                   </Button>

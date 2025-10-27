@@ -48,39 +48,39 @@ export default function ProductionList({ productionLogs, employees, onEdit, onDe
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>الموظف</TableHead>
-          <TableHead>التاريخ</TableHead>
-          <TableHead>الكمية</TableHead>
-          <TableHead>الحجم</TableHead>
-          <TableHead>العملية</TableHead>
-          <TableHead>التكلفة</TableHead>
-          <TableHead>إجراءات</TableHead>
+          <TableHead className="text-center">الموظف</TableHead>
+          <TableHead className="text-center">التاريخ</TableHead>
+          <TableHead className="text-center">الكمية</TableHead>
+          <TableHead className="text-center">الحجم</TableHead>
+          <TableHead className="text-center">العملية</TableHead>
+          <TableHead className="text-center">التكلفة</TableHead>
+          <TableHead className="text-center">إجراءات</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedLogs.length > 0 ? (
           sortedLogs.map((log) => (
             <TableRow key={log.id}>
-              <TableCell className="font-medium">
+              <TableCell className="text-center font-medium">
                 {employeeMap.get(log.employeeId) || "موظف محذوف"}
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {new Date(log.date).toLocaleDateString("ar-EG")}
               </TableCell>
-              <TableCell>{log.count}</TableCell>
-              <TableCell>
+              <TableCell className="text-center">{log.count}</TableCell>
+              <TableCell className="text-center">
                 <Badge variant={log.containerSize === 'large' ? 'default' : 'secondary'}>
                   {log.containerSize === "large" ? "كبير" : "صغير"}
                 </Badge>
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center">
                 {log.processType === "blown" ? "نفخ" : "لف"}
               </TableCell>
-              <TableCell className="font-semibold text-primary">
+              <TableCell className="text-center font-semibold text-primary">
                 {formatCurrency(log.cost)}
               </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="text-center">
+                <div className="flex gap-2 justify-center">
                   <Button variant="outline" size="icon" onClick={() => onEdit(log)}>
                     <Edit className="h-4 w-4" />
                   </Button>
