@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import type { Employee, ProductionLog } from "@/lib/types";
+import type { Employee, ProductionLog, SalaryPayment } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo } from "react";
@@ -16,30 +17,47 @@ import { FileText } from "lucide-react";
 
 interface EmployeeReportData {
   employee: Employee;
-  totalCost: number;
+  totalProductionCost: number;
+  totalPayments: number;
+  netSalary: number;
   productionCount: number;
 }
 
 export default function EmployeeReport() {
   const [employees] = useLocalStorage<Employee[]>("employees", []);
   const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
+  const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
 
   const employeeReportData: EmployeeReportData[] = useMemo(() => {
-    const reportMap = new Map<string, { totalCost: number; productionCount: number }>();
+    const reportMap = new Map<string, { totalProductionCost: number; productionCount: number }>();
+    const paymentsMap = new Map<string, number>();
 
     productionLogs.forEach((log) => {
-      const entry = reportMap.get(log.employeeId) || { totalCost: 0, productionCount: 0 };
-      entry.totalCost += log.cost;
+      const entry = reportMap.get(log.employeeId) || { totalProductionCost: 0, productionCount: 0 };
+      entry.totalProductionCost += log.cost;
       entry.productionCount += 1;
       reportMap.set(log.employeeId, entry);
     });
 
-    return employees.map((employee) => ({
-      employee,
-      totalCost: reportMap.get(employee.id)?.totalCost || 0,
-      productionCount: reportMap.get(employee.id)?.productionCount || 0,
-    })).sort((a, b) => b.totalCost - a.totalCost);
-  }, [employees, productionLogs]);
+    salaryPayments.forEach((payment) => {
+      const currentAmount = paymentsMap.get(payment.employeeId) || 0;
+      paymentsMap.set(payment.employeeId, currentAmount + payment.amount);
+    });
+
+    return employees.map((employee) => {
+      const productionData = reportMap.get(employee.id) || { totalProductionCost: 0, productionCount: 0 };
+      const totalPayments = paymentsMap.get(employee.id) || 0;
+      const netSalary = productionData.totalProductionCost - totalPayments;
+      
+      return {
+        employee,
+        totalProductionCost: productionData.totalProductionCost,
+        totalPayments,
+        netSalary,
+        productionCount: productionData.productionCount,
+      }
+    }).sort((a, b) => b.netSalary - a.netSalary);
+  }, [employees, productionLogs, salaryPayments]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("ar-YE", {
@@ -48,6 +66,8 @@ export default function EmployeeReport() {
       minimumFractionDigits: 0,
     }).format(value);
   };
+  
+  const totalNetSalaries = employeeReportData.reduce((sum, data) => sum + data.netSalary, 0);
 
   return (
     <div>
@@ -56,7 +76,7 @@ export default function EmployeeReport() {
           تقرير رواتب الموظفين
         </h1>
         <p className="text-muted-foreground">
-          عرض تفصيلي لإجمالي مستحقات كل موظف بناءً على الإنتاج.
+          عرض تفصيلي لإجمالي مستحقات كل موظف بناءً على الإنتاج والخصومات.
         </p>
       </div>
 
@@ -72,9 +92,9 @@ export default function EmployeeReport() {
             <TableHeader>
               <TableRow>
                 <TableHead>اسم الموظف</TableHead>
-                <TableHead>القسم</TableHead>
-                <TableHead>عدد عمليات الإنتاج</TableHead>
-                <TableHead className="text-left">إجمالي الراتب</TableHead>
+                <TableHead>إجمالي الإنتاج</TableHead>
+                <TableHead>إجمالي المصروف</TableHead>
+                <TableHead className="text-left">صافي الراتب</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -82,10 +102,10 @@ export default function EmployeeReport() {
                 employeeReportData.map((data) => (
                   <TableRow key={data.employee.id}>
                     <TableCell className="font-medium">{data.employee.name}</TableCell>
-                    <TableCell>{data.employee.department}</TableCell>
-                    <TableCell>{data.productionCount}</TableCell>
+                    <TableCell>{formatCurrency(data.totalProductionCost)}</TableCell>
+                    <TableCell className="text-destructive">{formatCurrency(data.totalPayments)}</TableCell>
                     <TableCell className="text-left font-semibold text-primary">
-                      {formatCurrency(data.totalCost)}
+                      {formatCurrency(data.netSalary)}
                     </TableCell>
                   </TableRow>
                 ))
@@ -97,6 +117,12 @@ export default function EmployeeReport() {
                 </TableRow>
               )}
             </TableBody>
+            <TableFooter>
+                <TableRow>
+                    <TableCell colSpan={3} className="font-bold text-lg">المجموع الإجمالي للرواتب الصافية</TableCell>
+                    <TableCell className="text-left font-bold text-lg text-primary">{formatCurrency(totalNetSalaries)}</TableCell>
+                </TableRow>
+            </TableFooter>
           </Table>
         </CardContent>
       </Card>

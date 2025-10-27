@@ -14,3 +14,11 @@ export interface ProductionLog {
   processType: 'blown' | 'rolled';
   cost: number;
 }
+
+export interface SalaryPayment {
+  id: string; // uuid
+  employeeId: string;
+  date: string; // ISO string
+  amount: number;
+  notes?: string;
+}
