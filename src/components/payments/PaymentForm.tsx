@@ -68,7 +68,7 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
           render={({ field }) => (
             <FormItem>
               <FormLabel>اختر الموظف</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="قائمة الموظفين" />
