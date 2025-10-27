@@ -181,4 +181,7 @@ export default function ReportGenerator() {
           </form>
         </Form>
       </CardContent>
-    </Card
+    </Card>
+    </div>
+  );
+}
