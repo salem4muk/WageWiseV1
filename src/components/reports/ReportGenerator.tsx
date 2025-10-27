@@ -58,6 +58,7 @@ const reportSchema = z.object({
     from: z.date({ required_error: "الرجاء تحديد تاريخ البدء." }),
     to: z.date({ required_error: "الرجاء تحديد تاريخ الانتهاء." }),
   }),
+  employeeId: z.string().optional(),
 });
 
 type ReportFormValues = z.infer<typeof reportSchema>;
@@ -69,6 +70,7 @@ export default function ReportGenerator() {
 
   const [reportData, setReportData] = useState<any[] | null>(null);
   const [activeReportType, setActiveReportType] = useState<string | null>(null);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
@@ -86,17 +88,30 @@ export default function ReportGenerator() {
   
   const onSubmit = (values: ReportFormValues) => {
     let data;
+    const { employeeId, dateRange } = values;
+
+    const filterByEmployee = (items: (ProductionLog | SalaryPayment)[]) => {
+      if (!employeeId || employeeId === 'all') return items;
+      return items.filter(item => item.employeeId === employeeId);
+    }
+    
     switch (values.reportType) {
       case "production":
-        data = filterByDateRange(productionLogs, values.dateRange);
+        data = filterByEmployee(filterByDateRange(productionLogs, dateRange));
         break;
       case "payments":
-        data = filterByDateRange(salaryPayments, values.dateRange);
+        data = filterByEmployee(filterByDateRange(salaryPayments, dateRange));
         break;
       case "employee_summary":
-        const filteredLogs = filterByDateRange(productionLogs, values.dateRange) as ProductionLog[];
-        const filteredPayments = filterByDateRange(salaryPayments, values.dateRange) as SalaryPayment[];
+        const filteredLogs = filterByEmployee(filterByDateRange(productionLogs, dateRange)) as ProductionLog[];
+        const filteredPayments = filterByEmployee(filterByDateRange(salaryPayments, dateRange)) as SalaryPayment[];
         
+        const targetEmployees = (employeeId && employeeId !== 'all') 
+          ? employees.filter(e => e.id === employeeId) 
+          : employees;
+          
+        setFilteredEmployees(targetEmployees);
+
         const reportMap = new Map<string, { totalProductionCost: number, productionCount: number }>();
         filteredLogs.forEach(log => {
           const entry = reportMap.get(log.employeeId) || { totalProductionCost: 0, productionCount: 0 };
@@ -111,7 +126,7 @@ export default function ReportGenerator() {
           paymentsMap.set(payment.employeeId, currentAmount + payment.amount);
         });
         
-        data = employees.map(employee => {
+        data = targetEmployees.map(employee => {
           const productionData = reportMap.get(employee.id) || { totalProductionCost: 0 };
           const totalPayments = paymentsMap.get(employee.id) || 0;
           return {
@@ -124,6 +139,9 @@ export default function ReportGenerator() {
         break;
       default:
         data = [];
+    }
+    if (values.reportType !== 'employee_summary') {
+        setFilteredEmployees(employees);
     }
     setReportData(data);
     setActiveReportType(values.reportType);
@@ -154,7 +172,7 @@ export default function ReportGenerator() {
           منشئ التقارير
         </h1>
         <p className="text-muted-foreground">
-         اختر نوع التقرير والنطاق الزمني لعرضه.
+         اختر نوع التقرير والنطاق الزمني والموظف لعرضه.
         </p>
       </div>
     <Card className="mb-8">
@@ -198,6 +216,30 @@ export default function ReportGenerator() {
 
             <FormField
               control={form.control}
+              name="employeeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>الموظف</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} dir="rtl">
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر موظفًا (اختياري)"/>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                       <SelectItem value="all">جميع الموظفين</SelectItem>
+                       {employees.map(emp => (
+                           <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                       ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="dateRange"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
@@ -213,7 +255,7 @@ export default function ReportGenerator() {
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="ms-2 h-4 w-4" />
+                           <CalendarIcon className="me-auto h-4 w-4 opacity-50" />
                           {field.value?.from ? (
                             field.value.to ? (
                               <>
