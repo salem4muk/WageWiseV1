@@ -1,9 +1,9 @@
-import PaymentForm from '@/components/payments/PaymentForm';
+import PaymentsManagement from '@/components/payments/PaymentsManagement';
 
-export default function AddPaymentPage() {
+export default function PaymentsPage() {
   return (
-    <div className="container mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
-      <PaymentForm />
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
+      <PaymentsManagement />
     </div>
   );
 }

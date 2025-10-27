@@ -38,7 +38,7 @@ export default function Header() {
     { href: "/", label: "لوحة التحكم" },
     { href: "/employees", label: "الموظفين" },
     { href: "/production/add", label: "إضافة إنتاج" },
-    { href: "/payments/add", label: "إضافة سند صرف" },
+    { href: "/payments/add", label: "سندات الصرف" },
     { href: "/reports/employees", label: "تقرير الرواتب" },
   ];
 
