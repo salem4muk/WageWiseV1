@@ -123,7 +123,7 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full pr-3 text-right font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
@@ -132,7 +132,7 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -180,13 +180,13 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
                 >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-3 space-x-reverse space-y-0">
                     <FormControl>
                       <RadioGroupItem value="large" />
                     </FormControl>
                     <FormLabel className="font-normal">كبير</FormLabel>
                   </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-3 space-x-reverse space-y-0">
                     <FormControl>
                       <RadioGroupItem value="small" />
                     </FormControl>
@@ -211,13 +211,13 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
                 >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-3 space-x-reverse space-y-0">
                     <FormControl>
                       <RadioGroupItem value="blown" />
                     </FormControl>
                     <FormLabel className="font-normal">نفخ (الكبير * 3, الصغير * 1)</FormLabel>
                   </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-3 space-x-reverse space-y-0">
                     <FormControl>
                       <RadioGroupItem value="rolled" />
                     </FormControl>

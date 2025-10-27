@@ -209,7 +209,7 @@ export default function ReportGenerator() {
                           id="date"
                           variant={"outline"}
                           className={cn(
-                            "w-full justify-start text-left font-normal",
+                            "w-full justify-start text-right font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
