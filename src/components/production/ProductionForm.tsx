@@ -123,16 +123,16 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-between pl-3 pr-4 font-normal",
+                        "w-full justify-between text-right font-normal",
                         !field.value && "text-muted-foreground"
                       )}
                     >
+                       <CalendarIcon className="me-2 h-4 w-4 opacity-50" />
                       {field.value ? (
                         format(field.value, "PPP", { locale: arSA })
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
-                      <CalendarIcon className="h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -234,8 +234,8 @@ export default function ProductionForm({ employees, onSubmit, initialData }: Pro
         />
 
         <Button type="submit" className="w-full" disabled={employees.length === 0}>
-          <Save className="ms-2 h-4 w-4" />
-          {initialData ? "حفظ التعديلات" : "حفظ الإنتاج"}
+          حفظ الإنتاج
+          <Save className="me-2 h-4 w-4" />
         </Button>
       </form>
     </Form>

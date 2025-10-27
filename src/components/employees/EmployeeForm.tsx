@@ -95,8 +95,8 @@ export default function EmployeeForm({ onSubmit, initialData }: EmployeeFormProp
           )}
         />
         <Button type="submit" className="w-full">
-            <Save className="ms-2 h-4 w-4"/>
             {initialData ? "حفظ التعديلات" : "حفظ الموظف"}
+            <Save className="me-2 h-4 w-4"/>
         </Button>
       </form>
     </Form>

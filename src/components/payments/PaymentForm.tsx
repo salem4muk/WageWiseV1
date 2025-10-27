@@ -126,12 +126,13 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
                         !field.value && "text-muted-foreground"
                       )}
                     >
+                      
                       {field.value ? (
                         format(field.value, "PPP", { locale: arSA })
                       ) : (
                         <span>اختر تاريخًا</span>
                       )}
-                       <CalendarIcon className="mr-auto h-4 w-4 opacity-50" />
+                       <CalendarIcon className="me-2 h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -182,8 +183,8 @@ export default function PaymentForm({ employees, onSubmit, initialData }: Paymen
         />
 
         <Button type="submit" className="w-full" disabled={employees.length === 0}>
-            <Save className="ms-2 h-4 w-4"/>
             حفظ السند
+            <Save className="me-2 h-4 w-4"/>
         </Button>
       </form>
     </Form>
