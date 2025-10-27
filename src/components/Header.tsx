@@ -40,6 +40,7 @@ export default function Header() {
     { href: "/production", label: "الإنتاج" },
     { href: "/payments", label: "سندات الصرف" },
     { href: "/reports/employees", label: "تقرير الرواتب" },
+    { href: "/reports/generator", label: "منشئ التقارير" },
   ];
 
   return (
