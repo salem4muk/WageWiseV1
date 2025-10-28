@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +28,7 @@ import type { Permission, Role } from "@/contexts/AuthContext";
 
 interface UserListProps {
   users: User[];
+  onEdit: (user: User) => void;
   onDelete: (userId: string) => void;
 }
 
@@ -44,7 +45,7 @@ const roleLabels: Record<Role, string> = {
     user: 'مستخدم'
 };
 
-export default function UserList({ users, onDelete }: UserListProps) {
+export default function UserList({ users, onEdit, onDelete }: UserListProps) {
   return (
     <Table>
       <TableHeader>
@@ -71,27 +72,32 @@ export default function UserList({ users, onDelete }: UserListProps) {
                 </div>
               </TableCell>
               <TableCell className="text-center">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف المستخدم نهائيًا.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(user.id!)}>
-                        حذف
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <div className="flex gap-2 justify-center">
+                  <Button variant="outline" size="icon" onClick={() => onEdit(user)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon" disabled={user.roles?.includes('admin')}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف المستخدم نهائيًا.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(user.id!)}>
+                          حذف
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))

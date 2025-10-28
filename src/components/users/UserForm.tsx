@@ -19,6 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Save } from "lucide-react";
 import type { Permission, Role } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { User } from "@/contexts/UsersContext";
 
 const permissions: { id: Permission; label: string }[] = [
   { id: 'create', label: 'إضافة' },
@@ -30,7 +32,7 @@ const permissions: { id: Permission; label: string }[] = [
 const userSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يكون الاسم حرفين على الأقل." }),
   email: z.string().email({ message: "بريد إلكتروني غير صالح." }),
-  password: z.string().min(6, { message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل." }),
+  password: z.string().optional(),
   role: z.enum(["user", "supervisor"], { required_error: "يجب اختيار دور للمستخدم."}),
   permissions: z.array(z.string()),
 }).superRefine((data, ctx) => {
@@ -43,14 +45,14 @@ const userSchema = z.object({
     }
 });
 
-
 type UserFormValues = z.infer<typeof userSchema>;
 
 interface UserFormProps {
   onSubmit: (values: Omit<UserFormValues, 'role'> & { roles: Role[] }) => void;
+  initialData?: User;
 }
 
-export default function UserForm({ onSubmit }: UserFormProps) {
+export default function UserForm({ onSubmit, initialData }: UserFormProps) {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -62,9 +64,38 @@ export default function UserForm({ onSubmit }: UserFormProps) {
     },
   });
 
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name,
+        email: initialData.email,
+        password: '', // Don't show existing password
+        role: initialData.roles?.find(r => r === 'supervisor' || r === 'user') || 'user',
+        permissions: initialData.permissions || [],
+      });
+    } else {
+      form.reset({
+        name: "",
+        email: "",
+        password: "",
+        role: "user",
+        permissions: [],
+      });
+    }
+  }, [initialData, form]);
+
   const selectedRole = form.watch("role");
 
   const handleFormSubmit = (values: UserFormValues) => {
+    if (!initialData && !values.password) {
+        form.setError("password", { type: "manual", message: "كلمة المرور مطلوبة." });
+        return;
+    }
+    if (values.password && values.password.length < 6) {
+        form.setError("password", { type: "manual", message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل." });
+        return;
+    }
+
     const { role, ...rest } = values;
     let permissions = values.permissions;
     let roles: Role[] = [role];
@@ -72,8 +103,15 @@ export default function UserForm({ onSubmit }: UserFormProps) {
     if (role === 'supervisor') {
       permissions = ['create', 'update', 'delete', 'view_reports'];
     }
+
+    const finalValues: any = { ...rest, roles, permissions };
+
+    // Only include password if it was changed
+    if (!values.password) {
+      delete finalValues.password;
+    }
     
-    onSubmit({ ...rest, roles, permissions });
+    onSubmit(finalValues);
   };
 
   return (
@@ -112,7 +150,7 @@ export default function UserForm({ onSubmit }: UserFormProps) {
             <FormItem>
               <FormLabel>كلمة المرور</FormLabel>
               <FormControl>
-                <Input type="password" {...field} dir="ltr"/>
+                <Input type="password" {...field} dir="ltr" placeholder={initialData ? "اتركه فارغًا لعدم التغيير" : ""}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -133,13 +171,13 @@ export default function UserForm({ onSubmit }: UserFormProps) {
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
                     <FormControl>
-                      <RadioGroupItem value="user" />
+                      <RadioGroupItem value="user" disabled={initialData?.roles?.includes('admin')} />
                     </FormControl>
                     <FormLabel className="font-normal">مستخدم عادي</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
                     <FormControl>
-                      <RadioGroupItem value="supervisor" />
+                      <RadioGroupItem value="supervisor" disabled={initialData?.roles?.includes('admin')} />
                     </FormControl>
                     <FormLabel className="font-normal">مشرف</FormLabel>
                   </FormItem>
@@ -205,7 +243,7 @@ export default function UserForm({ onSubmit }: UserFormProps) {
         )}
 
         <Button type="submit" className="w-full">
-            حفظ المستخدم
+            {initialData ? 'حفظ التعديلات' : 'حفظ المستخدم'}
             <Save className="me-2 h-4 w-4"/>
         </Button>
       </form>

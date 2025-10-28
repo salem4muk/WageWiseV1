@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUsers, User } from '@/contexts/UsersContext';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -19,13 +19,12 @@ import { useToast } from '@/hooks/use-toast';
 import UserForm from './UserForm';
 import UserList from './UserList';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { Role } from '@/contexts/AuthContext';
 
 export default function UserManagement() {
   const { user } = useAuth();
   const { users, setUsers } = useUsers();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -39,27 +38,45 @@ export default function UserManagement() {
     return null; // or a loading/access denied component
   }
 
-  const handleFormSubmit = (values: Omit<User, 'id'>) => {
-    // Check for duplicate email
-    if (users.some(u => u.email === values.email)) {
+  const handleFormSubmit = (values: Omit<User, 'id'> & { id?: string }) => {
+    if (editingUser) {
+      // Update user
+      const updatedUsers = users.map((u) =>
+        u.id === editingUser.id ? { ...u, ...values, id: u.id } : u
+      );
+      setUsers(updatedUsers);
       toast({
-        variant: "destructive",
-        title: "خطأ في الإضافة",
-        description: "هذا البريد الإلكتروني مستخدم بالفعل.",
+        title: "تم التعديل بنجاح",
+        description: `تم تحديث بيانات المستخدم ${values.name}.`,
       });
-      return;
+    } else {
+      // Create new user
+      if (users.some(u => u.email === values.email)) {
+        toast({
+          variant: "destructive",
+          title: "خطأ في الإضافة",
+          description: "هذا البريد الإلكتروني مستخدم بالفعل.",
+        });
+        return;
+      }
+      const newUser: User = {
+        id: crypto.randomUUID(),
+        ...values,
+      };
+      setUsers((prev) => [...prev, newUser]);
+      toast({
+        title: "تم بنجاح",
+        description: `تمت إضافة المستخدم ${values.name} بنجاح.`,
+      });
     }
 
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      ...values,
-    };
-    setUsers((prev) => [...prev, newUser]);
-    toast({
-      title: "تم بنجاح",
-      description: `تمت إضافة المستخدم ${values.name} بنجاح.`,
-    });
     setIsDialogOpen(false);
+    setEditingUser(undefined);
+  };
+  
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+    setIsDialogOpen(true);
   };
 
   const handleDelete = (userId: string) => {
@@ -71,15 +88,25 @@ export default function UserManagement() {
     });
   };
 
+  const openDialogForNew = () => {
+    setEditingUser(undefined);
+    setIsDialogOpen(true);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-headline font-bold text-foreground">
           إدارة المستخدمين
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+          setIsDialogOpen(isOpen);
+          if (!isOpen) {
+            setEditingUser(undefined);
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
               <PlusCircle className="ms-2 h-4 w-4" />
               <span>إضافة مستخدم جديد</span>
             </Button>
@@ -87,14 +114,17 @@ export default function UserManagement() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-headline">
-                إضافة مستخدم جديد
+                {editingUser ? "تعديل بيانات مستخدم" : "إضافة مستخدم جديد"}
               </DialogTitle>
               <DialogDescription>
-                أدخل تفاصيل المستخدم الجديد ودوره وصلاحياته.
+                {editingUser ? "قم بتحديث تفاصيل المستخدم." : "أدخل تفاصيل المستخدم الجديد ودوره وصلاحياته."}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <UserForm onSubmit={handleFormSubmit} />
+              <UserForm
+                onSubmit={handleFormSubmit}
+                initialData={editingUser}
+              />
             </div>
           </DialogContent>
         </Dialog>
@@ -108,7 +138,11 @@ export default function UserManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <UserList users={users} onDelete={handleDelete} />
+          <UserList 
+            users={users} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
         </CardContent>
       </Card>
     </div>
