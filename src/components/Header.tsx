@@ -57,22 +57,6 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Logo />
-          <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            {visibleNavItems.map((item) => (
-              <NavLink key={item.href} href={item.href}>
-                {item.label}
-              </NavLink>
-            ))}
-             {visibleAdminNavItems.map((item) => (
-              <NavLink key={item.href} href={item.href}>
-                <div className="flex items-center">{item.label}{item.icon}</div>
-              </NavLink>
-            ))}
-          </nav>
-        </div>
-
         <div className="flex items-center gap-2">
           {user && (
             <div className="flex items-center gap-2">
@@ -109,6 +93,21 @@ export default function Header() {
               </SheetContent>
             </Sheet>
           </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
+            {visibleNavItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                {item.label}
+              </NavLink>
+            ))}
+             {visibleAdminNavItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                <div className="flex items-center">{item.label}{item.icon}</div>
+              </NavLink>
+            ))}
+          </nav>
+          <Logo />
         </div>
       </div>
     </header>
