@@ -76,7 +76,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
            {user && (
             <div className="flex items-center gap-2">
-               <span className="hidden sm:inline text-sm text-muted-foreground">أهلاً, {user.name}</span>
+               <span className="text-sm text-muted-foreground">أهلاً, {user.name}</span>
                <Button variant="ghost" size="icon" onClick={logout} title="تسجيل الخروج">
                 <LogOut className="h-5 w-5" />
                </Button>
