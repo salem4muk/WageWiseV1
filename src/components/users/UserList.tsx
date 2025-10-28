@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "../ui/badge";
-import type { Permission } from "@/contexts/AuthContext";
+import type { Permission, Role } from "@/contexts/AuthContext";
 
 interface UserListProps {
   users: User[];
@@ -38,6 +38,12 @@ const permissionLabels: Record<Permission, string> = {
     view_reports: 'عرض التقارير',
 };
 
+const roleLabels: Record<Role, string> = {
+    admin: 'مدير',
+    supervisor: 'مشرف',
+    user: 'مستخدم'
+};
+
 export default function UserList({ users, onDelete }: UserListProps) {
   return (
     <Table>
@@ -45,6 +51,7 @@ export default function UserList({ users, onDelete }: UserListProps) {
         <TableRow>
           <TableHead className="text-center">الاسم</TableHead>
           <TableHead className="text-center">البريد الإلكتروني</TableHead>
+          <TableHead className="text-center">الدور</TableHead>
           <TableHead className="text-center">الصلاحيات</TableHead>
           <TableHead className="text-center">إجراءات</TableHead>
         </TableRow>
@@ -55,6 +62,9 @@ export default function UserList({ users, onDelete }: UserListProps) {
             <TableRow key={user.id}>
               <TableCell className="text-center font-medium">{user.name}</TableCell>
               <TableCell className="text-center">{user.email}</TableCell>
+              <TableCell className="text-center">
+                 {user.roles?.map(r => <Badge key={r}>{roleLabels[r]}</Badge>)}
+              </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-1 justify-center flex-wrap">
                     {user.permissions?.map(p => <Badge key={p} variant="secondary">{permissionLabels[p]}</Badge>)}
@@ -87,7 +97,7 @@ export default function UserList({ users, onDelete }: UserListProps) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={4} className="h-24 text-center">
+            <TableCell colSpan={5} className="h-24 text-center">
               لا يوجد مستخدمين. قم بإضافة مستخدم جديد.
             </TableCell>
           </TableRow>

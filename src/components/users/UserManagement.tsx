@@ -79,7 +79,7 @@ export default function UserManagement() {
                 إضافة مستخدم جديد
               </DialogTitle>
               <DialogDescription>
-                أدخل تفاصيل المستخدم الجديد وصلاحياته.
+                أدخل تفاصيل المستخدم الجديد ودوره وصلاحياته.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">

@@ -67,7 +67,7 @@ const reportSchema = z.object({
 type ReportFormValues = z.infer<typeof reportSchema>;
 
 export default function ReportGenerator() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, hasRole } = useAuth();
   const router = useRouter();
 
   const [employees] = useLocalStorage<Employee[]>("employees", []);
@@ -79,10 +79,10 @@ export default function ReportGenerator() {
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-    if (!hasPermission('view_reports')) {
+    if (!hasPermission('view_reports') || hasRole('supervisor')) {
       router.push('/');
     }
-  }, [hasPermission, router]);
+  }, [hasPermission, hasRole, router]);
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
@@ -176,7 +176,7 @@ export default function ReportGenerator() {
     }
   }
 
-  if (!hasPermission('view_reports')) {
+  if (!hasPermission('view_reports') || hasRole('supervisor')) {
     return null; // or a loading/access denied component
   }
 

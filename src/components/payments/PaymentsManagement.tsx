@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Employee, SalaryPayment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import PaymentForm from "./PaymentForm";
 import PaymentsList from "./PaymentsList";
 import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 export default function PaymentsManagement() {
   const [employees] = useLocalStorage<Employee[]>("employees", []);
@@ -27,7 +28,14 @@ export default function PaymentsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<SalaryPayment | undefined>(undefined);
   const { toast } = useToast();
-  const { hasPermission } = useAuth();
+  const { hasPermission, hasRole } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (hasRole('supervisor')) {
+      router.push('/');
+    }
+  }, [hasRole, router]);
 
   const canCreate = hasPermission('create');
   const canUpdate = hasPermission('update');
@@ -85,6 +93,10 @@ export default function PaymentsManagement() {
     if (!canCreate) return;
     setEditingPayment(undefined);
     setIsDialogOpen(true);
+  }
+
+  if (hasRole('supervisor')) {
+    return null;
   }
 
   return (

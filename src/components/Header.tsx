@@ -10,7 +10,7 @@ import { Menu, Settings2, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const Logo = () => (
-  <Link href="/" className="flex items-center gap-1.5 -mr-1">
+  <Link href="/" className="flex items-center gap-2">
     <Settings2 className="h-7 w-7 text-primary" />
     <span className="font-headline text-2xl font-bold text-primary">
       WageWise
@@ -36,16 +36,24 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 };
 
 export default function Header() {
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout, hasPermission, hasRole } = useAuth();
   
-  const navItems = [
+  let navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
     { href: "/employees", label: "الموظفين", permission: true },
-    { href: "/production", label: "الإنتاج", permission: true },
-    { href: "/payments", label: "سندات الصرف", permission: true },
-    { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
-    { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
+    { href: "/production", label: "الإنتاج", permission: !hasRole('supervisor') },
+    { href: "/payments", label: "سندات الصرف", permission: !hasRole('supervisor') },
+    { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') && !hasRole('supervisor') },
+    { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') && !hasRole('supervisor') },
   ];
+
+  if (hasRole('supervisor')) {
+    navItems = [
+      { href: "/", label: "لوحة التحكم", permission: true },
+      { href: "/employees", label: "الموظفين", permission: true },
+    ];
+  }
+
 
   const adminNavItems = [
     { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/>, permission: user?.roles?.includes('admin') },
