@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo, useEffect } from "react";
-import { FileText } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import { downloadAsTextFile } from "@/lib/utils";
 
 interface EmployeeReportData {
   employee: Employee;
@@ -78,6 +80,24 @@ export default function EmployeeReport() {
       minimumFractionDigits: 0,
     }).format(value);
   };
+
+  const handleExport = () => {
+    let content = `تقرير رواتب الموظفين\n`;
+    content += `تاريخ التصدير: ${new Date().toLocaleDateString("ar-EG")}\n`;
+    content += "========================================================\n\n";
+
+    employeeReportData.forEach(data => {
+      content += `اسم الموظف: ${data.employee.name}\n`;
+      content += `إجمالي الإنتاج: ${formatCurrency(data.totalProductionCost)}\n`;
+      content += `إجمالي المصروف: ${formatCurrency(data.totalPayments)}\n`;
+      content += `صافي الراتب: ${formatCurrency(data.netSalary)}\n`;
+      content += "--------------------------------------------------------\n";
+    });
+
+    content += `\nالمجموع الإجمالي للرواتب الصافية: ${formatCurrency(totalNetSalaries)}\n`;
+
+    downloadAsTextFile(content, "report-salaries-summary.txt");
+  };
   
   const totalNetSalaries = employeeReportData.reduce((sum, data) => sum + data.netSalary, 0);
 
@@ -87,13 +107,19 @@ export default function EmployeeReport() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-headline font-bold text-foreground">
-          تقرير رواتب الموظفين
-        </h1>
-        <p className="text-muted-foreground">
-          عرض تفصيلي لإجمالي مستحقات كل موظف بناءً على الإنتاج والخصومات.
-        </p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+            <h1 className="text-3xl font-headline font-bold text-foreground">
+            تقرير رواتب الموظفين
+            </h1>
+            <p className="text-muted-foreground">
+            عرض تفصيلي لإجمالي مستحقات كل موظف بناءً على الإنتاج والخصومات.
+            </p>
+        </div>
+        <Button onClick={handleExport} disabled={employeeReportData.length === 0}>
+            <Download className="ms-2 h-4 w-4" />
+            تصدير إلى TXT
+        </Button>
       </div>
 
       <Card>

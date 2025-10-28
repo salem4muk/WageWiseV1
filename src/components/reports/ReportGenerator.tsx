@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import { Calendar as CalendarIcon, FileSearch } from "lucide-react";
+import { Calendar as CalendarIcon, FileSearch, Download } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, downloadAsTextFile } from "@/lib/utils";
 import type { Employee, ProductionLog, SalaryPayment } from "@/lib/types";
 
 import ProductionReportTable from "./ProductionReportTable";
@@ -76,6 +76,7 @@ export default function ReportGenerator() {
 
   const [reportData, setReportData] = useState<any[] | null>(null);
   const [activeReportType, setActiveReportType] = useState<string | null>(null);
+  const [activeReportMetadata, setActiveReportMetadata] = useState<any>(null);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
@@ -87,6 +88,14 @@ export default function ReportGenerator() {
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
   });
+  
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("ar-YE", {
+      style: "currency",
+      currency: "YER",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
 
   const filterByDateRange = (items: (ProductionLog | SalaryPayment)[], dateRange: DateRange) => {
     const from = dateRange.from!;
@@ -100,7 +109,7 @@ export default function ReportGenerator() {
   
   const onSubmit = (values: ReportFormValues) => {
     let data;
-    const { employeeId, dateRange } = values;
+    const { employeeId, dateRange, reportType } = values;
 
     const filterByEmployee = (items: (ProductionLog | SalaryPayment)[]) => {
       if (!employeeId || employeeId === 'all') return items;
@@ -157,6 +166,69 @@ export default function ReportGenerator() {
     }
     setReportData(data);
     setActiveReportType(values.reportType);
+    setActiveReportMetadata({
+      dateRange,
+      employeeId,
+      reportType,
+    });
+  };
+
+  const handleExport = () => {
+    if (!reportData || !activeReportType || !activeReportMetadata) return;
+
+    const { dateRange, employeeId, reportType } = activeReportMetadata;
+    const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
+    const selectedEmployeeName = employeeId === 'all' || !employeeId ? 'جميع الموظفين' : employeeMap.get(employeeId) || 'موظف محذوف';
+
+    let content = `تقرير ${reportType === 'production' ? 'الإنتاج' : reportType === 'payments' ? 'سندات الصرف' : 'ملخص الرواتب'}\n`;
+    content += `من: ${format(dateRange.from, "dd/MM/yyyy", { locale: arSA })} إلى: ${format(dateRange.to, "dd/MM/yyyy", { locale: arSA })}\n`;
+    content += `الموظف: ${selectedEmployeeName}\n`;
+    content += "========================================================\n\n";
+
+    if (reportData.length === 0) {
+      content += "لا توجد بيانات لعرضها في هذا النطاق الزمني.\n";
+    } else {
+      switch (reportType) {
+        case "production":
+          let totalCost = 0;
+          (reportData as ProductionLog[]).forEach(log => {
+            totalCost += log.cost;
+            content += `الموظف: ${employeeMap.get(log.employeeId)}\n`;
+            content += `التاريخ: ${new Date(log.date).toLocaleDateString("ar-EG")}\n`;
+            content += `الكمية: ${log.count}, الحجم: ${log.containerSize === 'large' ? 'كبير' : 'صغير'}, العملية: ${log.processType === 'blown' ? 'نفخ' : 'لف'}\n`;
+            content += `التكلفة: ${formatCurrency(log.cost)}\n`;
+            content += "--------------------------------------------------------\n";
+          });
+          content += `\nالمجموع الإجمالي للتكلفة: ${formatCurrency(totalCost)}\n`;
+          break;
+        case "payments":
+          let totalAmount = 0;
+          (reportData as SalaryPayment[]).forEach(payment => {
+            totalAmount += payment.amount;
+            content += `الموظف: ${employeeMap.get(payment.employeeId)}\n`;
+            content += `التاريخ: ${new Date(payment.date).toLocaleDateString("ar-EG")}\n`;
+            content += `المبلغ: ${formatCurrency(payment.amount)}\n`;
+            content += `ملاحظات: ${payment.notes || 'لا يوجد'}\n`;
+            content += "--------------------------------------------------------\n";
+          });
+          content += `\nالمجموع الإجمالي للمصروفات: ${formatCurrency(totalAmount)}\n`;
+          break;
+        case "employee_summary":
+          let totalNet = 0;
+          reportData.forEach(item => {
+            totalNet += item.netSalary;
+            content += `الموظف: ${item.employee.name}\n`;
+            content += `إجمالي الإنتاج: ${formatCurrency(item.totalProductionCost)}\n`;
+            content += `إجمالي المصروف: ${formatCurrency(item.totalPayments)}\n`;
+            content += `صافي الراتب: ${formatCurrency(item.netSalary)}\n`;
+            content += "--------------------------------------------------------\n";
+          });
+          content += `\nالمجموع الإجمالي للرواتب الصافية: ${formatCurrency(totalNet)}\n`;
+          break;
+      }
+    }
+
+    downloadAsTextFile(content, `report-${reportType}-${dateRange.from.toISOString().split('T')[0]}.txt`);
   };
   
   const renderReport = () => {
@@ -313,6 +385,15 @@ export default function ReportGenerator() {
       </CardContent>
     </Card>
     
+    {reportData && (
+        <div className="flex justify-end mb-4">
+            <Button onClick={handleExport} disabled={reportData.length === 0}>
+                <Download className="ms-2 h-4 w-4" />
+                تصدير إلى TXT
+            </Button>
+        </div>
+    )}
+
     {renderReport()}
 
     </div>
