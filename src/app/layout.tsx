@@ -48,6 +48,12 @@ export default function RootLayout({
       <head>
         <title>WageWise</title>
         <meta name="description" content="Employee production and salary management" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#f0e7f9" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="WageWise" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
