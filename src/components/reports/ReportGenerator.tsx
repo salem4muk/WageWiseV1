@@ -9,6 +9,9 @@ import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { Calendar as CalendarIcon, FileSearch, Download } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { amiriFont } from "@/lib/amiri-font";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Button } from "@/components/ui/button";
@@ -230,6 +233,102 @@ export default function ReportGenerator() {
 
     downloadAsTextFile(content, `report-${reportType}-${dateRange.from.toISOString().split('T')[0]}.txt`);
   };
+
+  const handleExportPdf = () => {
+    if (!reportData || !activeReportType || !activeReportMetadata) return;
+
+    const doc = new jsPDF();
+
+    // Add Amiri font for Arabic support
+    doc.addFileToVFS("Amiri-Regular.ttf", amiriFont);
+    doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+    doc.setFont("Amiri");
+
+    const { dateRange, employeeId, reportType } = activeReportMetadata;
+    const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
+    const selectedEmployeeName = employeeId === 'all' || !employeeId ? 'جميع الموظفين' : employeeMap.get(employeeId) || 'موظف محذوف';
+    
+    const reportTitleMap = {
+        production: 'تقرير الإنتاج',
+        payments: 'تقرير سندات الصرف',
+        employee_summary: 'تقرير ملخص رواتب الموظفين'
+    };
+
+    const title = reportTitleMap[reportType as keyof typeof reportTitleMap];
+    const dateFromString = format(dateRange.from, "dd/MM/yyyy", { locale: arSA });
+    const dateToString = format(dateRange.to, "dd/MM/yyyy", { locale: arSA });
+    
+    doc.text(title, 105, 15, { align: 'center', lang: 'ar' });
+    doc.setFontSize(10);
+    doc.text(`الفترة من: ${dateFromString} إلى: ${dateToString}`, 105, 22, { align: 'center', lang: 'ar' });
+    doc.text(`الموظف: ${selectedEmployeeName}`, 105, 29, { align: 'center', lang: 'ar' });
+    
+    let head: any[] = [];
+    let body: any[] = [];
+    let totalRow: any[] = [];
+    
+    const styles = { font: "Amiri", halign: 'center', fontStyle: 'normal' };
+    const headStyles = { ...styles, fillColor: [41, 128, 185], textColor: 255 };
+
+    switch (reportType) {
+        case 'production':
+            head = [['التكلفة', 'العملية', 'الحجم', 'الكمية', 'التاريخ', 'الموظف']];
+            body = (reportData as ProductionLog[]).map(log => [
+                formatCurrency(log.cost),
+                log.processType === 'blown' ? 'نفخ' : 'لف',
+                log.containerSize === 'large' ? 'كبير' : 'صغير',
+                log.count,
+                new Date(log.date).toLocaleDateString("ar-EG"),
+                employeeMap.get(log.employeeId) || 'محذوف'
+            ]);
+            const totalCost = reportData.reduce((sum, log) => sum + log.cost, 0);
+            totalRow = [{ content: formatCurrency(totalCost), colSpan: 1, styles }, {content: 'المجموع الإجمالي', colSpan: 5, styles: { ...styles, fontStyle: 'bold' } }];
+            break;
+        case 'payments':
+            head = [['ملاحظات', 'المبلغ', 'التاريخ', 'الموظف']];
+            body = (reportData as SalaryPayment[]).map(p => [
+                p.notes || '-',
+                formatCurrency(p.amount),
+                new Date(p.date).toLocaleDateString("ar-EG"),
+                employeeMap.get(p.employeeId) || 'محذوف'
+            ]);
+            const totalAmount = reportData.reduce((sum, p) => sum + p.amount, 0);
+            totalRow = [{ content: '', styles }, { content: formatCurrency(totalAmount), styles }, {content: 'المجموع الإجمالي', colSpan: 2, styles: { ...styles, fontStyle: 'bold' } }];
+            break;
+        case 'employee_summary':
+            head = [['صافي الراتب', 'إجمالي المصروف', 'إجمالي الإنتاج', 'اسم الموظف']];
+            body = reportData.map(d => [
+                formatCurrency(d.netSalary),
+                formatCurrency(d.totalPayments),
+                formatCurrency(d.totalProductionCost),
+                d.employee.name
+            ]);
+            const totalNet = reportData.reduce((sum, d) => sum + d.netSalary, 0);
+            totalRow = [{ content: formatCurrency(totalNet), styles }, {content: 'المجموع الإجمالي', colSpan: 3, styles: { ...styles, fontStyle: 'bold' } }];
+            break;
+    }
+    
+    if (reportData.length > 0) {
+      body.push(totalRow);
+    }
+    
+    autoTable(doc, {
+        head,
+        body,
+        startY: 35,
+        styles,
+        headStyles,
+        theme: 'grid',
+        didDrawCell: (data) => {
+            if (data.row.section === 'body' && data.column.dataKey !== undefined) {
+                 // Right-align the text in cells for RTL
+                doc.text(String(data.cell.text), data.cell.x + data.cell.width - 5, data.cell.y + 7, { align: 'right' });
+            }
+        }
+    });
+
+    doc.save(`report-${reportType}-${dateRange.from.toISOString().split('T')[0]}.pdf`);
+  };
   
   const renderReport = () => {
     if (!reportData) {
@@ -386,10 +485,14 @@ export default function ReportGenerator() {
     </Card>
     
     {reportData && (
-        <div className="flex justify-end mb-4">
-            <Button onClick={handleExport} disabled={reportData.length === 0}>
+        <div className="flex justify-end mb-4 gap-2">
+            <Button onClick={handleExport} disabled={reportData.length === 0} variant="outline">
                 <Download className="ms-2 h-4 w-4" />
                 تصدير إلى TXT
+            </Button>
+            <Button onClick={handleExportPdf} disabled={reportData.length === 0}>
+                <Download className="ms-2 h-4 w-4" />
+                تصدير إلى PDF
             </Button>
         </div>
     )}
