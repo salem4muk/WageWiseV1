@@ -1,16 +1,42 @@
 
+"use client";
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import PrivateRoute from '@/components/auth/PrivateRoute';
 import { UsersProvider } from '@/contexts/UsersContext';
+import { usePathname } from 'next/navigation';
+import { ReactNode } from 'react';
 
-export const metadata: Metadata = {
-  title: 'WageWise',
-  description: 'Employee production and salary management',
+// This can't be set dynamically for a client component layout root.
+// We are setting it here as a static object.
+// export const metadata: Metadata = {
+//   title: 'WageWise',
+//   description: 'Employee production and salary management',
+// };
+
+const AppLayout = ({ children }: { children: ReactNode }) => {
+  const { user, loading } = useAuth();
+  const pathname = usePathname();
+
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <Header />
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
+  );
 };
+
 
 export default function RootLayout({
   children,
@@ -20,6 +46,8 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <head>
+        <title>WageWise</title>
+        <meta name="description" content="Employee production and salary management" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -28,12 +56,9 @@ export default function RootLayout({
         <AuthProvider>
           <UsersProvider>
             <PrivateRoute>
-              <div className="flex min-h-screen w-full flex-col bg-background">
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-              </div>
+              <AppLayout>
+                {children}
+              </AppLayout>
               <Toaster />
             </PrivateRoute>
           </UsersProvider>
