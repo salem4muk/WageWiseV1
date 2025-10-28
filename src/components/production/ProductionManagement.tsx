@@ -27,14 +27,8 @@ export default function ProductionManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<ProductionLog | undefined>(undefined);
   const { toast } = useToast();
-  const { hasPermission, hasRole } = useAuth();
+  const { hasPermission } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (hasRole('supervisor')) {
-      router.push('/');
-    }
-  }, [hasRole, router]);
 
   const canCreate = hasPermission('create');
   const canUpdate = hasPermission('update');
@@ -102,10 +96,6 @@ export default function ProductionManagement() {
     if (!canCreate) return;
     setEditingLog(undefined);
     setIsDialogOpen(true);
-  }
-
-  if (hasRole('supervisor')) {
-    return null;
   }
 
   return (

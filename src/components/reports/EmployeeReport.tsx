@@ -27,7 +27,7 @@ interface EmployeeReportData {
 }
 
 export default function EmployeeReport() {
-  const { hasPermission, hasRole } = useAuth();
+  const { hasPermission } = useAuth();
   const router = useRouter();
 
   const [employees] = useLocalStorage<Employee[]>("employees", []);
@@ -35,10 +35,10 @@ export default function EmployeeReport() {
   const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
 
   useEffect(() => {
-    if (!hasPermission('view_reports') || hasRole('supervisor')) {
+    if (!hasPermission('view_reports')) {
       router.push('/');
     }
-  }, [hasPermission, hasRole, router]);
+  }, [hasPermission, router]);
 
   const employeeReportData: EmployeeReportData[] = useMemo(() => {
     const reportMap = new Map<string, { totalProductionCost: number; productionCount: number }>();
@@ -81,7 +81,7 @@ export default function EmployeeReport() {
   
   const totalNetSalaries = employeeReportData.reduce((sum, data) => sum + data.netSalary, 0);
 
-  if (!hasPermission('view_reports') || hasRole('supervisor')) {
+  if (!hasPermission('view_reports')) {
     return null; // or a loading/access denied component
   }
 
