@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,11 +6,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Menu, Settings2 } from "lucide-react";
+import { Menu, Settings2, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2">
-    <Settings2 className="h-7 w-7 text-primary" />
+    <Settings2 className="h-6 w-6 text-primary" />
     <span className="font-headline text-2xl font-bold text-primary">
       WageWise
     </span>
@@ -34,6 +36,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 };
 
 export default function Header() {
+  const { user, logout } = useAuth();
   const navItems = [
     { href: "/", label: "لوحة التحكم" },
     { href: "/employees", label: "الموظفين" },
@@ -56,27 +59,38 @@ export default function Header() {
             ))}
           </nav>
         </div>
+        
+        <div className="flex items-center gap-4">
+          {user && (
+            <div className="flex items-center gap-2">
+               <span className="hidden sm:inline text-sm text-muted-foreground">أهلاً, {user.name}</span>
+               <Button variant="ghost" size="icon" onClick={logout} title="تسجيل الخروج">
+                <LogOut className="h-5 w-5" />
+               </Button>
+            </div>
+          )}
 
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col gap-6 p-6">
-                <Logo />
-                <nav className="flex flex-col gap-4 text-lg font-medium">
-                  {navItems.map((item) => (
-                    <NavLink key={item.href} href={item.href}>
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col gap-6 p-6">
+                  <Logo />
+                  <nav className="flex flex-col gap-4 text-lg font-medium">
+                    {navItems.map((item) => (
+                      <NavLink key={item.href} href={item.href}>
+                        {item.label}
+                      </NavLink>
+                    ))}
+                  </nav>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </header>

@@ -1,7 +1,10 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
+import { AuthProvider } from '@/contexts/AuthContext';
+import PrivateRoute from '@/components/auth/PrivateRoute';
 
 export const metadata: Metadata = {
   title: 'WageWise',
@@ -21,13 +24,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <div className="flex min-h-screen w-full flex-col bg-background">
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
-        <Toaster />
+        <AuthProvider>
+            <PrivateRoute>
+              <div className="flex min-h-screen w-full flex-col bg-background">
+                <Header />
+                <main className="flex-1">
+                  {children}
+                </main>
+              </div>
+              <Toaster />
+            </PrivateRoute>
+        </AuthProvider>
       </body>
     </html>
   );
