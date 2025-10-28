@@ -1,21 +1,40 @@
 {
-  "theme_color": "#f0e7f9",
-  "background_color": "#f0e7f9",
-  "display": "standalone",
-  "scope": "/",
-  "start_url": "/",
   "name": "WageWise",
   "short_name": "WageWise",
   "description": "Employee production and salary management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0e7f9",
+  "theme_color": "#f0e7f9",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-256x256.png",
-      "sizes": "256x256",
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png"
     },
     {
