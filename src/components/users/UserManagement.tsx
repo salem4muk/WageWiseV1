@@ -39,6 +39,16 @@ export default function UserManagement() {
   }
 
   const handleFormSubmit = (values: any) => {
+    // Check for duplicate email
+    if (users.some(u => u.email === values.email)) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في الإضافة",
+        description: "هذا البريد الإلكتروني مستخدم بالفعل.",
+      });
+      return;
+    }
+
     const newUser: User = {
       id: crypto.randomUUID(),
       ...values,
