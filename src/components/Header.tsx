@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Menu, Settings2, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -41,8 +41,8 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
     { href: "/employees", label: "الموظفين", permission: hasRole('admin') || hasRole('supervisor') },
-    { href: "/production", label: "الإنتاج", permission: hasPermission('create') },
-    { href: "/payments", label: "سندات الصرف", permission: hasPermission('create') },
+    { href: "/production", label: "الإنتاج", permission: hasRole('admin') || hasRole('supervisor') || hasPermission('create') },
+    { href: "/payments", label: "سندات الصرف", permission: hasRole('admin') || hasRole('supervisor') || hasPermission('create') },
     { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
     { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
   ];
@@ -90,6 +90,9 @@ export default function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                </SheetHeader>
                 <div className="flex flex-col gap-6 p-6">
                   <Logo />
                   <nav className="flex flex-col gap-4 text-lg font-medium">
