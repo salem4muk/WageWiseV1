@@ -10,6 +10,7 @@ export default function EmployeesPage() {
   const { hasRole } = useAuth();
   const router = useRouter();
 
+  // Access for admin or supervisor
   const isAuthorized = hasRole('admin') || hasRole('supervisor');
 
   useEffect(() => {

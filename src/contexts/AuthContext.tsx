@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (userData: User) => {
     let permissions: Permission[] = userData.permissions || [];
     if (userData.roles?.includes('supervisor')) {
+        // Supervisors can manage everything except other users.
         permissions = ['create', 'update', 'delete', 'view_reports'];
     }
     setUser({ ...userData, permissions });

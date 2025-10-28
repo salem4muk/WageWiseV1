@@ -41,8 +41,8 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
     { href: "/employees", label: "الموظفين", permission: hasRole('admin') || hasRole('supervisor') },
-    { href: "/production", label: "الإنتاج", permission: !hasRole('supervisor') },
-    { href: "/payments", label: "سندات الصرف", permission: !hasRole('supervisor') },
+    { href: "/production", label: "الإنتاج", permission: hasPermission('create') },
+    { href: "/payments", label: "سندات الصرف", permission: hasPermission('create') },
     { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
     { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
   ];
