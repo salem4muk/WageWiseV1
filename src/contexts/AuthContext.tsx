@@ -36,7 +36,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const login = (userData: User) => {
-    setUser(userData);
+    let permissions: Permission[] = userData.permissions || [];
+    if (userData.roles?.includes('supervisor')) {
+        permissions = ['create', 'update', 'delete', 'view_reports'];
+    }
+    setUser({ ...userData, permissions });
   };
 
   const logout = () => {

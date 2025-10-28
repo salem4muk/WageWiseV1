@@ -3,14 +3,14 @@
 
 import React, { createContext, useContext } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Permission } from './AuthContext';
+import { Permission, Role } from './AuthContext';
 
 export interface User {
   id?: string;
   name: string;
   email: string;
   password?: string;
-  roles?: string[];
+  roles?: Role[];
   permissions: Permission[];
 }
 

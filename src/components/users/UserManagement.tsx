@@ -20,6 +20,7 @@ import UserForm from './UserForm';
 import UserList from './UserList';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Role } from '@/contexts/AuthContext';
 
 export default function UserManagement() {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export default function UserManagement() {
     return null; // or a loading/access denied component
   }
 
-  const handleFormSubmit = (values: any) => {
+  const handleFormSubmit = (values: Omit<User, 'id'>) => {
     // Check for duplicate email
     if (users.some(u => u.email === values.email)) {
       toast({

@@ -70,7 +70,7 @@ export default function UserForm({ onSubmit }: UserFormProps) {
     let roles: Role[] = [role];
 
     if (role === 'supervisor') {
-      permissions = []; // Supervisors don't need specific permissions from this form
+      permissions = ['create', 'update', 'delete', 'view_reports'];
     }
     
     onSubmit({ ...rest, roles, permissions });
@@ -145,6 +145,9 @@ export default function UserForm({ onSubmit }: UserFormProps) {
                   </FormItem>
                 </RadioGroup>
               </FormControl>
+              <FormDescription>
+                المشرف لديه صلاحيات الإضافة والتعديل والحذف وعرض التقارير.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
