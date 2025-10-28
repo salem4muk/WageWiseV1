@@ -41,8 +41,8 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
     { href: "/employees", label: "الموظفين", permission: hasRole('admin') || hasRole('supervisor') },
-    { href: "/production", label: "الإنتاج", permission: true },
-    { href: "/payments", label: "سندات الصرف", permission: true },
+    { href: "/production", label: "الإنتاج", permission: !hasRole('supervisor') },
+    { href: "/payments", label: "سندات الصرف", permission: !hasRole('supervisor') },
     { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
     { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
   ];
@@ -57,7 +57,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <Logo />
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
             {visibleNavItems.map((item) => (
@@ -73,7 +73,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
           {user && (
             <div className="flex items-center gap-2">
                <span className="hidden sm:inline text-sm text-muted-foreground">أهلاً, {user.name}</span>
