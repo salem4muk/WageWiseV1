@@ -10,7 +10,7 @@ import { Menu, Settings2, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const Logo = () => (
-  <Link href="/" className="flex items-center gap-2">
+  <Link href="/" className="flex items-center gap-1.5 -mr-1">
     <Settings2 className="h-7 w-7 text-primary" />
     <span className="font-headline text-2xl font-bold text-primary">
       WageWise
@@ -36,20 +36,23 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 };
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   
   const navItems = [
-    { href: "/", label: "لوحة التحكم" },
-    { href: "/employees", label: "الموظفين" },
-    { href: "/production", label: "الإنتاج" },
-    { href: "/payments", label: "سندات الصرف" },
-    { href: "/reports/employees", label: "تقرير الرواتب" },
-    { href: "/reports/generator", label: "منشئ التقارير" },
+    { href: "/", label: "لوحة التحكم", permission: true },
+    { href: "/employees", label: "الموظفين", permission: true },
+    { href: "/production", label: "الإنتاج", permission: true },
+    { href: "/payments", label: "سندات الصرف", permission: true },
+    { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
+    { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
   ];
 
   const adminNavItems = [
-    { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/> },
+    { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/>, permission: user?.roles?.includes('admin') },
   ];
+
+  const visibleNavItems = navItems.filter(item => item.permission);
+  const visibleAdminNavItems = adminNavItems.filter(item => item.permission);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -57,12 +60,12 @@ export default function Header() {
         <div className="flex items-center gap-6">
           <Logo />
           <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink key={item.href} href={item.href}>
                 {item.label}
               </NavLink>
             ))}
-             {user?.roles?.includes('admin') && adminNavItems.map((item) => (
+             {visibleAdminNavItems.map((item) => (
               <NavLink key={item.href} href={item.href}>
                 <div className="flex items-center">{item.label}{item.icon}</div>
               </NavLink>
@@ -91,12 +94,12 @@ export default function Header() {
                 <div className="flex flex-col gap-6 p-6">
                   <Logo />
                   <nav className="flex flex-col gap-4 text-lg font-medium">
-                    {navItems.map((item) => (
+                    {visibleNavItems.map((item) => (
                       <NavLink key={item.href} href={item.href}>
                         {item.label}
                       </NavLink>
                     ))}
-                    {user?.roles?.includes('admin') && adminNavItems.map((item) => (
+                    {visibleAdminNavItems.map((item) => (
                       <NavLink key={item.href} href={item.href}>
                         <div className="flex items-center">{item.label}{item.icon}</div>
                       </NavLink>

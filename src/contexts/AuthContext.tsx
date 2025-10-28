@@ -4,7 +4,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
-export type Permission = 'create' | 'update' | 'delete';
+export type Permission = 'create' | 'update' | 'delete' | 'view_reports';
 
 export interface User {
   email: string;
@@ -42,7 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const hasPermission = (permission: Permission): boolean => {
-    if (!user || !user.permissions) {
+    if (!user) {
+      return false;
+    }
+    // Admin has all permissions
+    if (user.roles?.includes('admin')) {
+      return true;
+    }
+    if (!user.permissions) {
       return false;
     }
     return user.permissions.includes(permission);

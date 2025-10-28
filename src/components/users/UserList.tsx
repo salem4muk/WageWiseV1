@@ -35,6 +35,7 @@ const permissionLabels: Record<Permission, string> = {
     create: 'إضافة',
     update: 'تعديل',
     delete: 'حذف',
+    view_reports: 'عرض التقارير',
 };
 
 export default function UserList({ users, onDelete }: UserListProps) {
@@ -55,7 +56,7 @@ export default function UserList({ users, onDelete }: UserListProps) {
               <TableCell className="text-center font-medium">{user.name}</TableCell>
               <TableCell className="text-center">{user.email}</TableCell>
               <TableCell className="text-center">
-                <div className="flex gap-1 justify-center">
+                <div className="flex gap-1 justify-center flex-wrap">
                     {user.permissions?.map(p => <Badge key={p} variant="secondary">{permissionLabels[p]}</Badge>)}
                 </div>
               </TableCell>

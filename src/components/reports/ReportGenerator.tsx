@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -45,6 +46,8 @@ import type { Employee, ProductionLog, SalaryPayment } from "@/lib/types";
 import ProductionReportTable from "./ProductionReportTable";
 import PaymentsReportTable from "./PaymentsReportTable";
 import EmployeeSummaryReportTable from "./EmployeeSummaryReportTable";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 const reportSchema = z.object({
   reportType: z.enum([
@@ -64,6 +67,9 @@ const reportSchema = z.object({
 type ReportFormValues = z.infer<typeof reportSchema>;
 
 export default function ReportGenerator() {
+  const { hasPermission } = useAuth();
+  const router = useRouter();
+
   const [employees] = useLocalStorage<Employee[]>("employees", []);
   const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
   const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
@@ -71,6 +77,12 @@ export default function ReportGenerator() {
   const [reportData, setReportData] = useState<any[] | null>(null);
   const [activeReportType, setActiveReportType] = useState<string | null>(null);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    if (!hasPermission('view_reports')) {
+      router.push('/');
+    }
+  }, [hasPermission, router]);
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportSchema),
@@ -164,6 +176,9 @@ export default function ReportGenerator() {
     }
   }
 
+  if (!hasPermission('view_reports')) {
+    return null; // or a loading/access denied component
+  }
 
   return (
     <div>
@@ -268,7 +283,7 @@ export default function ReportGenerator() {
                           ) : (
                             <span>اختر نطاقًا زمنيًا</span>
                           )}
-                           <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
+                           <CalendarIcon className="me-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>

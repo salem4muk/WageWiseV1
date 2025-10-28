@@ -23,6 +23,7 @@ const permissions: { id: Permission; label: string }[] = [
   { id: 'create', label: 'إضافة' },
   { id: 'update', label: 'تعديل' },
   { id: 'delete', label: 'حذف' },
+  { id: 'view_reports', label: 'عرض التقارير' },
 ];
 
 const userSchema = z.object({

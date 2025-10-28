@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -12,8 +13,10 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { FileText } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 interface EmployeeReportData {
   employee: Employee;
@@ -24,9 +27,18 @@ interface EmployeeReportData {
 }
 
 export default function EmployeeReport() {
+  const { hasPermission } = useAuth();
+  const router = useRouter();
+
   const [employees] = useLocalStorage<Employee[]>("employees", []);
   const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
   const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
+
+  useEffect(() => {
+    if (!hasPermission('view_reports')) {
+      router.push('/');
+    }
+  }, [hasPermission, router]);
 
   const employeeReportData: EmployeeReportData[] = useMemo(() => {
     const reportMap = new Map<string, { totalProductionCost: number; productionCount: number }>();
@@ -68,6 +80,10 @@ export default function EmployeeReport() {
   };
   
   const totalNetSalaries = employeeReportData.reduce((sum, data) => sum + data.netSalary, 0);
+
+  if (!hasPermission('view_reports')) {
+    return null; // or a loading/access denied component
+  }
 
   return (
     <div>
