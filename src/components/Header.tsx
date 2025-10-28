@@ -40,7 +40,7 @@ export default function Header() {
   
   let navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
-    { href: "/employees", label: "الموظفين", permission: true },
+    { href: "/employees", label: "الموظفين", permission: hasRole('admin') || hasRole('supervisor') },
     { href: "/production", label: "الإنتاج", permission: !hasRole('supervisor') },
     { href: "/payments", label: "سندات الصرف", permission: !hasRole('supervisor') },
     { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') && !hasRole('supervisor') },
