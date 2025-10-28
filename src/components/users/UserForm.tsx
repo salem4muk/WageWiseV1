@@ -32,16 +32,17 @@ const userSchema = z.object({
   email: z.string().email({ message: "بريد إلكتروني غير صالح." }),
   password: z.string().min(6, { message: "يجب أن تكون كلمة المرور 6 أحرف على الأقل." }),
   role: z.enum(["user", "supervisor"], { required_error: "يجب اختيار دور للمستخدم."}),
-  permissions: z.array(z.string()).refine((value, ctx) => {
-    const { role } = ctx.path.length > 1 ? ctx.parent : { role: 'user' };
-    if (role === 'user' && value.length === 0) {
-      return false;
+  permissions: z.array(z.string()),
+}).superRefine((data, ctx) => {
+    if (data.role === 'user' && data.permissions.length === 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['permissions'],
+            message: "يجب عليك تحديد صلاحية واحدة على الأقل للمستخدم العادي.",
+        });
     }
-    return true;
-  }, {
-    message: "يجب عليك تحديد صلاحية واحدة على الأقل للمستخدم العادي.",
-  }),
 });
+
 
 type UserFormValues = z.infer<typeof userSchema>;
 
