@@ -9,17 +9,42 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { User, useUsers } from '@/contexts/UsersContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const { users } = useUsers();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogin = () => {
-    // In a real app, you'd validate credentials here
-    login({ email, name: 'مستخدم تجريبي' });
-    router.push('/');
+    // Admin login
+    if (email === 'admin@admin.com' && password === '12345678') {
+      login({ 
+        email, 
+        name: 'المدير', 
+        roles: ['admin'], 
+        permissions: ['create', 'update', 'delete'] 
+      });
+      router.push('/');
+      return;
+    }
+
+    // Regular user login
+    const foundUser = users.find(user => user.email === email && user.password === password);
+    if (foundUser) {
+      login(foundUser);
+      router.push('/');
+    } else {
+      toast({
+        variant: "destructive",
+        title: "خطأ في تسجيل الدخول",
+        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      });
+    }
   };
 
   return (

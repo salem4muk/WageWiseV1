@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
 import PrivateRoute from '@/components/auth/PrivateRoute';
+import { UsersProvider } from '@/contexts/UsersContext';
 
 export const metadata: Metadata = {
   title: 'WageWise',
@@ -25,6 +26,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
+          <UsersProvider>
             <PrivateRoute>
               <div className="flex min-h-screen w-full flex-col bg-background">
                 <Header />
@@ -34,6 +36,7 @@ export default function RootLayout({
               </div>
               <Toaster />
             </PrivateRoute>
+          </UsersProvider>
         </AuthProvider>
       </body>
     </html>

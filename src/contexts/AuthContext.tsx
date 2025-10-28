@@ -4,9 +4,13 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
-interface User {
+export type Permission = 'create' | 'update' | 'delete';
+
+export interface User {
   email: string;
   name: string;
+  roles?: string[];
+  permissions?: Permission[];
 }
 
 interface AuthContextType {
@@ -14,6 +18,7 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => void;
   loading: boolean;
+  hasPermission: (permission: Permission) => boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,8 +41,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
+  const hasPermission = (permission: Permission): boolean => {
+    if (!user || !user.permissions) {
+      return false;
+    }
+    return user.permissions.includes(permission);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

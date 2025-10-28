@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -17,6 +18,7 @@ import { PlusCircle, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ProductionForm from "./ProductionForm";
 import ProductionList from "./ProductionList";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ProductionManagement() {
   const [employees] = useLocalStorage<Employee[]>("employees", []);
@@ -24,6 +26,11 @@ export default function ProductionManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<ProductionLog | undefined>(undefined);
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+
+  const canCreate = hasPermission('create');
+  const canUpdate = hasPermission('update');
+  const canDelete = hasPermission('delete');
 
   const calculateCost = (values: any): number => {
     const { count, containerSize, processType } = values;
@@ -40,6 +47,7 @@ export default function ProductionManagement() {
     const date = values.date.toISOString();
 
     if (editingLog) {
+      if (!canUpdate) return;
       const updatedLogs = productionLogs.map((log) =>
         log.id === editingLog.id ? { ...log, ...values, date, cost: calculateCost(values) } : log
       );
@@ -49,6 +57,7 @@ export default function ProductionManagement() {
         description: "تم تحديث سجل الإنتاج.",
       });
     } else {
+      if (!canCreate) return;
       const newLog: ProductionLog = {
         id: crypto.randomUUID(),
         ...values,
@@ -66,11 +75,13 @@ export default function ProductionManagement() {
   };
 
   const handleEdit = (log: ProductionLog) => {
+    if (!canUpdate) return;
     setEditingLog(log);
     setIsDialogOpen(true);
   };
 
   const handleDelete = (logId: string) => {
+    if (!canDelete) return;
     setProductionLogs((prev) => prev.filter((p) => p.id !== logId));
     toast({
       variant: "destructive",
@@ -80,6 +91,7 @@ export default function ProductionManagement() {
   };
 
   const openDialogForNew = () => {
+    if (!canCreate) return;
     setEditingLog(undefined);
     setIsDialogOpen(true);
   }
@@ -90,36 +102,38 @@ export default function ProductionManagement() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           إدارة الإنتاج
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-          setIsDialogOpen(isOpen);
-          if (!isOpen) {
-            setEditingLog(undefined);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <PlusCircle className="ms-2 h-4 w-4" />
-              <span>إضافة إنتاج جديد</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-headline">
-                {editingLog ? "تعديل سجل إنتاج" : "إضافة إنتاج جديد"}
-              </DialogTitle>
-              <DialogDescription>
-                 {editingLog ? "قم بتحديث تفاصيل سجل الإنتاج." : "أدخل تفاصيل الإنتاج الجديد لحفظه."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <ProductionForm
-                employees={employees}
-                onSubmit={handleFormSubmit}
-                initialData={editingLog}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        {canCreate && (
+          <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+            setIsDialogOpen(isOpen);
+            if (!isOpen) {
+              setEditingLog(undefined);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <PlusCircle className="ms-2 h-4 w-4" />
+                <span>إضافة إنتاج جديد</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-headline">
+                  {editingLog ? "تعديل سجل إنتاج" : "إضافة إنتاج جديد"}
+                </DialogTitle>
+                <DialogDescription>
+                   {editingLog ? "قم بتحديث تفاصيل سجل الإنتاج." : "أدخل تفاصيل الإنتاج الجديد لحفظه."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <ProductionForm
+                  employees={employees}
+                  onSubmit={handleFormSubmit}
+                  initialData={editingLog}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card>
@@ -135,6 +149,8 @@ export default function ProductionManagement() {
             employees={employees}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
           />
         </CardContent>
       </Card>

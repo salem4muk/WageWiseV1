@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -7,10 +8,13 @@ import ProductionTable from "./ProductionTable";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
   const [employees] = useLocalStorage<Employee[]>("employees", []);
   const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
+  const { hasPermission } = useAuth();
+  const canCreate = hasPermission('create');
 
   const totalCost = productionLogs.reduce((acc, log) => acc + log.cost, 0);
   const totalEmployees = employees.length;
@@ -22,12 +26,14 @@ export default function Dashboard() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           لوحة التحكم
         </h1>
-        <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-          <Link href="/production">
-            <PlusCircle className="ms-2 h-4 w-4" />
-            <span>إضافة إنتاج جديد</span>
-          </Link>
-        </Button>
+        {canCreate && (
+            <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Link href="/production">
+                <PlusCircle className="ms-2 h-4 w-4" />
+                <span>إضافة إنتاج جديد</span>
+            </Link>
+            </Button>
+        )}
       </div>
       <SummaryCards
         totalCost={totalCost}

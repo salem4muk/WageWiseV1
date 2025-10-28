@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -17,15 +18,22 @@ import { PlusCircle, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EmployeeForm from "./EmployeeForm";
 import EmployeeList from "./EmployeeList";
+import { useAuth } from "@/hooks/use-auth";
 
 export function EmployeeManagement() {
   const [employees, setEmployees] = useLocalStorage<Employee[]>("employees", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+
+  const canCreate = hasPermission('create');
+  const canUpdate = hasPermission('update');
+  const canDelete = hasPermission('delete');
 
   const handleFormSubmit = (values: any) => {
     if (editingEmployee) {
+      if (!canUpdate) return;
       const updatedEmployees = employees.map((emp) =>
         emp.id === editingEmployee.id ? { ...editingEmployee, ...values } : emp
       );
@@ -35,6 +43,7 @@ export function EmployeeManagement() {
         description: `تم تحديث بيانات الموظف ${values.name}.`,
       });
     } else {
+      if (!canCreate) return;
       const newEmployee: Employee = {
         id: crypto.randomUUID(),
         ...values,
@@ -50,11 +59,13 @@ export function EmployeeManagement() {
   };
   
   const handleEdit = (employee: Employee) => {
+    if (!canUpdate) return;
     setEditingEmployee(employee);
     setIsDialogOpen(true);
   };
 
   const handleDelete = (employeeId: string) => {
+    if (!canDelete) return;
     setEmployees((prev) => prev.filter((emp) => emp.id !== employeeId));
     toast({
       variant: "destructive",
@@ -64,6 +75,7 @@ export function EmployeeManagement() {
   };
 
   const openDialogForNew = () => {
+    if (!canCreate) return;
     setEditingEmployee(undefined);
     setIsDialogOpen(true);
   }
@@ -74,35 +86,37 @@ export function EmployeeManagement() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           إدارة الموظفين
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-          setIsDialogOpen(isOpen);
-          if (!isOpen) {
-            setEditingEmployee(undefined);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <PlusCircle className="ms-2 h-4 w-4" />
-              <span>إضافة موظف جديد</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-headline">
-                {editingEmployee ? "تعديل بيانات موظف" : "إضافة موظف جديد"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingEmployee ? "قم بتحديث تفاصيل الموظف." : "أدخل تفاصيل الموظف الجديد لحفظه في النظام."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-               <EmployeeForm
-                onSubmit={handleFormSubmit}
-                initialData={editingEmployee}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        {canCreate && (
+          <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+            setIsDialogOpen(isOpen);
+            if (!isOpen) {
+              setEditingEmployee(undefined);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <PlusCircle className="ms-2 h-4 w-4" />
+                <span>إضافة موظف جديد</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-headline">
+                  {editingEmployee ? "تعديل بيانات موظف" : "إضافة موظف جديد"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingEmployee ? "قم بتحديث تفاصيل الموظف." : "أدخل تفاصيل الموظف الجديد لحفظه في النظام."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                 <EmployeeForm
+                  onSubmit={handleFormSubmit}
+                  initialData={editingEmployee}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card>
@@ -117,6 +131,8 @@ export function EmployeeManagement() {
             employees={employees}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
           />
         </CardContent>
       </Card>

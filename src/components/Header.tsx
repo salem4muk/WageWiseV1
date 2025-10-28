@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Menu, Settings2, LogOut, User } from "lucide-react";
+import { Menu, Settings2, LogOut, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2">
-    <Settings2 className="h-6 w-6 text-primary" />
+    <Settings2 className="h-7 w-7 text-primary" />
     <span className="font-headline text-2xl font-bold text-primary">
       WageWise
     </span>
@@ -37,6 +37,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 
 export default function Header() {
   const { user, logout } = useAuth();
+  
   const navItems = [
     { href: "/", label: "لوحة التحكم" },
     { href: "/employees", label: "الموظفين" },
@@ -44,6 +45,10 @@ export default function Header() {
     { href: "/payments", label: "سندات الصرف" },
     { href: "/reports/employees", label: "تقرير الرواتب" },
     { href: "/reports/generator", label: "منشئ التقارير" },
+  ];
+
+  const adminNavItems = [
+    { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/> },
   ];
 
   return (
@@ -55,6 +60,11 @@ export default function Header() {
             {navItems.map((item) => (
               <NavLink key={item.href} href={item.href}>
                 {item.label}
+              </NavLink>
+            ))}
+             {user?.roles?.includes('admin') && adminNavItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                <div className="flex items-center">{item.label}{item.icon}</div>
               </NavLink>
             ))}
           </nav>
@@ -84,6 +94,11 @@ export default function Header() {
                     {navItems.map((item) => (
                       <NavLink key={item.href} href={item.href}>
                         {item.label}
+                      </NavLink>
+                    ))}
+                    {user?.roles?.includes('admin') && adminNavItems.map((item) => (
+                      <NavLink key={item.href} href={item.href}>
+                        <div className="flex items-center">{item.label}{item.icon}</div>
                       </NavLink>
                     ))}
                   </nav>

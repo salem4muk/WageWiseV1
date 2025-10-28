@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Employee } from "@/lib/types";
@@ -27,9 +28,11 @@ interface EmployeeListProps {
   employees: Employee[];
   onEdit: (employee: Employee) => void;
   onDelete: (employeeId: string) => void;
+  canUpdate: boolean;
+  canDelete: boolean;
 }
 
-export default function EmployeeList({ employees, onEdit, onDelete }: EmployeeListProps) {
+export default function EmployeeList({ employees, onEdit, onDelete, canUpdate, canDelete }: EmployeeListProps) {
   return (
     <Table>
       <TableHeader>
@@ -49,30 +52,34 @@ export default function EmployeeList({ employees, onEdit, onDelete }: EmployeeLi
               <TableCell className="text-center">{employee.department}</TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" size="icon" onClick={() => onEdit(employee)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف الموظف نهائيًا.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(employee.id)}>
-                          حذف
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {canUpdate && (
+                    <Button variant="outline" size="icon" onClick={() => onEdit(employee)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف الموظف نهائيًا.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(employee.id)}>
+                            حذف
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

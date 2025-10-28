@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Employee, ProductionLog } from "@/lib/types";
@@ -29,9 +30,11 @@ interface ProductionListProps {
   employees: Employee[];
   onEdit: (log: ProductionLog) => void;
   onDelete: (logId: string) => void;
+  canUpdate: boolean;
+  canDelete: boolean;
 }
 
-export default function ProductionList({ productionLogs, employees, onEdit, onDelete }: ProductionListProps) {
+export default function ProductionList({ productionLogs, employees, onEdit, onDelete, canUpdate, canDelete }: ProductionListProps) {
   const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
 
   const formatCurrency = (value: number) => {
@@ -81,30 +84,34 @@ export default function ProductionList({ productionLogs, employees, onEdit, onDe
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" size="icon" onClick={() => onEdit(log)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف سجل الإنتاج نهائيًا.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(log.id)}>
-                          حذف
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {canUpdate && (
+                    <Button variant="outline" size="icon" onClick={() => onEdit(log)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف سجل الإنتاج نهائيًا.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(log.id)}>
+                            حذف
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

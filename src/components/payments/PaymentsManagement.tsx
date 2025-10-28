@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -18,6 +19,7 @@ import { PlusCircle, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PaymentForm from "./PaymentForm";
 import PaymentsList from "./PaymentsList";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function PaymentsManagement() {
   const [employees] = useLocalStorage<Employee[]>("employees", []);
@@ -25,11 +27,17 @@ export default function PaymentsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<SalaryPayment | undefined>(undefined);
   const { toast } = useToast();
+  const { hasPermission } = useAuth();
+
+  const canCreate = hasPermission('create');
+  const canUpdate = hasPermission('update');
+  const canDelete = hasPermission('delete');
 
   const handleFormSubmit = (values: any) => {
     const date = values.date.toISOString();
 
     if (editingPayment) {
+      if (!canUpdate) return;
       // Update existing payment
       const updatedPayments = payments.map((p) =>
         p.id === editingPayment.id ? { ...p, ...values, date } : p
@@ -40,6 +48,7 @@ export default function PaymentsManagement() {
         description: "تم تحديث سند الصرف.",
       });
     } else {
+      if (!canCreate) return;
       // Add new payment
       const newPayment: SalaryPayment = {
         id: crypto.randomUUID(),
@@ -57,11 +66,13 @@ export default function PaymentsManagement() {
   };
 
   const handleEdit = (payment: SalaryPayment) => {
+    if (!canUpdate) return;
     setEditingPayment(payment);
     setIsDialogOpen(true);
   };
 
   const handleDelete = (paymentId: string) => {
+    if (!canDelete) return;
     setPayments((prev) => prev.filter((p) => p.id !== paymentId));
     toast({
       variant: "destructive",
@@ -71,6 +82,7 @@ export default function PaymentsManagement() {
   };
 
   const openDialogForNew = () => {
+    if (!canCreate) return;
     setEditingPayment(undefined);
     setIsDialogOpen(true);
   }
@@ -81,36 +93,38 @@ export default function PaymentsManagement() {
         <h1 className="text-3xl font-headline font-bold text-foreground">
           إدارة سندات الصرف
         </h1>
-        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-          setIsDialogOpen(isOpen);
-          if (!isOpen) {
-            setEditingPayment(undefined);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <PlusCircle className="ms-2 h-4 w-4" />
-              <span>إضافة سند جديد</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-headline">
-                {editingPayment ? "تعديل سند صرف" : "إضافة سند صرف جديد"}
-              </DialogTitle>
-              <DialogDescription>
-                 {editingPayment ? "قم بتحديث تفاصيل سند الصرف." : "أدخل تفاصيل السند الجديد لحفظه."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <PaymentForm
-                employees={employees}
-                onSubmit={handleFormSubmit}
-                initialData={editingPayment}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        {canCreate && (
+          <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+            setIsDialogOpen(isOpen);
+            if (!isOpen) {
+              setEditingPayment(undefined);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={openDialogForNew} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <PlusCircle className="ms-2 h-4 w-4" />
+                <span>إضافة سند جديد</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-headline">
+                  {editingPayment ? "تعديل سند صرف" : "إضافة سند صرف جديد"}
+                </DialogTitle>
+                <DialogDescription>
+                   {editingPayment ? "قم بتحديث تفاصيل سند الصرف." : "أدخل تفاصيل السند الجديد لحفظه."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <PaymentForm
+                  employees={employees}
+                  onSubmit={handleFormSubmit}
+                  initialData={editingPayment}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card>
@@ -126,6 +140,8 @@ export default function PaymentsManagement() {
             employees={employees}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
           />
         </CardContent>
       </Card>

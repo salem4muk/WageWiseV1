@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Employee, SalaryPayment } from "@/lib/types";
@@ -28,9 +29,11 @@ interface PaymentsListProps {
   employees: Employee[];
   onEdit: (payment: SalaryPayment) => void;
   onDelete: (paymentId: string) => void;
+  canUpdate: boolean;
+  canDelete: boolean;
 }
 
-export default function PaymentsList({ payments, employees, onEdit, onDelete }: PaymentsListProps) {
+export default function PaymentsList({ payments, employees, onEdit, onDelete, canUpdate, canDelete }: PaymentsListProps) {
   const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
 
   const formatCurrency = (value: number) => {
@@ -70,30 +73,34 @@ export default function PaymentsList({ payments, employees, onEdit, onDelete }: 
               <TableCell className="text-center">{payment.notes}</TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" size="icon" onClick={() => onEdit(payment)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                       <Button variant="destructive" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف سند الصرف نهائيًا.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(payment.id)}>
-                          حذف
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {canUpdate && (
+                    <Button variant="outline" size="icon" onClick={() => onEdit(payment)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canDelete && (
+                     <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                         <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف سند الصرف نهائيًا.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(payment.id)}>
+                            حذف
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
