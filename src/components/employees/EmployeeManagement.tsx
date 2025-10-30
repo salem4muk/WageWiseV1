@@ -34,7 +34,7 @@ export function EmployeeManagement() {
   const canUpdate = hasPermission('update');
   const canDelete = hasPermission('delete');
 
-  const handleFormSubmit = async (values: any) => {
+  const handleFormSubmit = async (values: Omit<Employee, 'id' | 'employeeId'>) => {
     try {
       if (editingEmployee) {
         if (!canUpdate) return;
@@ -46,11 +46,22 @@ export function EmployeeManagement() {
         });
       } else {
         if (!canCreate) return;
+
+        // Auto-generate employeeId
+        const existingIds = employees?.map(e => parseInt(e.employeeId, 10)).filter(id => !isNaN(id)) || [0];
+        const maxId = Math.max(0, ...existingIds);
+        const newEmployeeId = (maxId + 1).toString();
+
+        const newEmployeeData = {
+          ...values,
+          employeeId: newEmployeeId,
+        };
+
         const employeesCollectionRef = collection(firestore, "employees");
-        await addDoc(employeesCollectionRef, values);
+        await addDoc(employeesCollectionRef, newEmployeeData);
         toast({
           title: "تم بنجاح",
-          description: `تمت إضافة الموظف ${values.name} بنجاح.`,
+          description: `تمت إضافة الموظف ${values.name} برقم المعرف ${newEmployeeId} بنجاح.`,
         });
       }
       setIsDialogOpen(false);

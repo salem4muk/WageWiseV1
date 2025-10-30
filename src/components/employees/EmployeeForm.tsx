@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -19,7 +20,6 @@ import type { Employee } from "@/lib/types";
 
 const employeeSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يكون الاسم حرفين على الأقل." }),
-  employeeId: z.string().min(1, { message: "معرف الموظف مطلوب." }),
   department: z.string().min(2, { message: "يجب أن يكون القسم حرفين على الأقل." }),
 });
 
@@ -35,22 +35,25 @@ export default function EmployeeForm({ onSubmit, initialData }: EmployeeFormProp
     resolver: zodResolver(employeeSchema),
     defaultValues: initialData || {
       name: "",
-      employeeId: "",
       department: "",
     },
   });
 
   useEffect(() => {
     if (initialData) {
-      form.reset(initialData);
+      form.reset({
+        name: initialData.name,
+        department: initialData.department,
+      });
     } else {
         form.reset({
             name: "",
-            employeeId: "",
             department: "",
         });
     }
   }, [initialData, form]);
+  
+  const isEditing = !!initialData;
 
   return (
     <Form {...form}>
@@ -68,19 +71,16 @@ export default function EmployeeForm({ onSubmit, initialData }: EmployeeFormProp
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="employeeId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>معرف الموظف</FormLabel>
-              <FormControl>
-                <Input placeholder="مثال: 1023" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+         {isEditing && initialData.employeeId && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">معرف الموظف</label>
+            <Input
+              value={initialData.employeeId}
+              disabled
+              className="bg-muted"
+            />
+          </div>
+        )}
         <FormField
           control={form.control}
           name="department"
