@@ -63,7 +63,8 @@ export default function Header() {
   const visibleNavItems = navItems.filter(item => item.permission);
   const visibleAdminNavItems = adminNavItems.filter(item => item.permission);
   
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 

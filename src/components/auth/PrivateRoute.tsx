@@ -12,10 +12,12 @@ export default function PrivateRoute({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login') {
+    if (loading) return; // Wait for the auth state to be determined
+
+    if (!user && pathname !== '/login') {
       router.push('/login');
     }
-     if (!loading && user && pathname === '/login') {
+     if (user && pathname === '/login') {
       router.push('/');
     }
   }, [user, loading, router, pathname]);
@@ -40,12 +42,14 @@ export default function PrivateRoute({ children }: { children: ReactNode }) {
     )
   }
 
+  // If we are on any route that requires auth, but we're not loaded and don't have a user
   if (!user && pathname !== '/login') {
-    return null; // Don't render anything while redirecting
+    return null; // Don't render anything, the useEffect will redirect
   }
   
+  // If we are on the login page, but we do have a user
   if (user && pathname === '/login') {
-    return null; // Don't render login page if user is logged in
+    return null; // Don't render anything, the useEffect will redirect
   }
 
   return <>{children}</>;

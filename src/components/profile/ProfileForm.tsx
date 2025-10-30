@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Save } from "lucide-react";
 import { useEffect } from "react";
-import type { User } from "@/contexts/UsersContext";
+import type { User } from "@/contexts/AuthContext";
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يكون الاسم حرفين على الأقل." }),
@@ -24,14 +24,15 @@ const profileSchema = z.object({
   password: z.string().optional(),
 });
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+export type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
   onSubmit: (values: ProfileFormValues) => void;
-  initialData?: User;
+  initialData?: User | null;
+  loading: boolean;
 }
 
-export default function ProfileForm({ onSubmit, initialData }: ProfileFormProps) {
+export default function ProfileForm({ onSubmit, initialData, loading }: ProfileFormProps) {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -44,8 +45,8 @@ export default function ProfileForm({ onSubmit, initialData }: ProfileFormProps)
   useEffect(() => {
     if (initialData) {
       form.reset({
-        name: initialData.name,
-        email: initialData.email,
+        name: initialData.name || '',
+        email: initialData.email || '',
         password: "", // Always start with empty password
       });
     }
@@ -78,7 +79,7 @@ export default function ProfileForm({ onSubmit, initialData }: ProfileFormProps)
             <FormItem>
               <FormLabel>الاسم</FormLabel>
               <FormControl>
-                <Input placeholder="اسمك" {...field} />
+                <Input placeholder="اسمك" {...field} disabled={loading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +92,7 @@ export default function ProfileForm({ onSubmit, initialData }: ProfileFormProps)
             <FormItem>
               <FormLabel>البريد الإلكتروني</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="user@example.com" {...field} dir="ltr" />
+                <Input type="email" placeholder="user@example.com" {...field} dir="ltr" disabled={loading} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -104,15 +105,15 @@ export default function ProfileForm({ onSubmit, initialData }: ProfileFormProps)
             <FormItem>
               <FormLabel>كلمة المرور الجديدة</FormLabel>
               <FormControl>
-                <Input type="password" {...field} dir="ltr" placeholder="اتركه فارغًا لعدم التغيير" />
+                <Input type="password" {...field} dir="ltr" placeholder="اتركه فارغًا لعدم التغيير" disabled={loading} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         
-        <Button type="submit" className="w-full">
-            حفظ التعديلات
+        <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'جارِ الحفظ...' : 'حفظ التعديلات'}
             <Save className="me-2 h-4 w-4"/>
         </Button>
       </form>

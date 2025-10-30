@@ -1,7 +1,7 @@
 
+"use client";
+
 import UserManagement from '@/components/users/UserManagement';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { UsersProvider } from '@/contexts/UsersContext';
 
 export default function UsersPage() {
   return (

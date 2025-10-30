@@ -6,9 +6,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth as useAppAuth } from '@/hooks/use-auth';
 import PrivateRoute from '@/components/auth/PrivateRoute';
-import { UsersProvider } from '@/contexts/UsersContext';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import FirebaseClientProvider from '@/firebase/client-provider';
@@ -21,7 +20,7 @@ import FirebaseClientProvider from '@/firebase/client-provider';
 // };
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAppAuth();
   const pathname = usePathname();
 
   if (pathname === '/login') {
@@ -62,14 +61,12 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AuthProvider>
-            <UsersProvider>
-              <PrivateRoute>
-                <AppLayout>
-                  {children}
-                </AppLayout>
-                <Toaster />
-              </PrivateRoute>
-            </UsersProvider>
+            <PrivateRoute>
+              <AppLayout>
+                {children}
+              </AppLayout>
+              <Toaster />
+            </PrivateRoute>
           </AuthProvider>
         </FirebaseClientProvider>
       </body>
