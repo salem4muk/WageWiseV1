@@ -6,8 +6,17 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { Menu, Settings2, LogOut, Shield } from "lucide-react";
+import { Menu, Settings2, LogOut, Shield, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const Logo = () => (
   <Link href="/" className="flex items-center gap-2">
@@ -41,8 +50,8 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "لوحة التحكم", permission: true },
     { href: "/employees", label: "الموظفين", permission: hasRole('admin') || hasRole('supervisor') },
-    { href: "/production", label: "الإنتاج", permission: hasRole('admin') || hasRole('supervisor') || hasPermission('create') },
-    { href: "/payments", label: "سندات الصرف", permission: hasRole('admin') || hasRole('supervisor') || hasPermission('create') },
+    { href: "/production", label: "الإنتاج", permission: hasPermission('create') },
+    { href: "/payments", label: "سندات الصرف", permission: hasPermission('create') },
     { href: "/reports/employees", label: "تقرير الرواتب", permission: hasPermission('view_reports') },
     { href: "/reports/generator", label: "منشئ التقارير", permission: hasPermission('view_reports') },
   ];
@@ -53,6 +62,10 @@ export default function Header() {
 
   const visibleNavItems = navItems.filter(item => item.permission);
   const visibleAdminNavItems = adminNavItems.filter(item => item.permission);
+  
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,12 +88,37 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
            {user && (
-            <div className="flex items-center gap-2">
-               <span className="text-sm text-muted-foreground">أهلاً, {user.name}</span>
-               <Button variant="ghost" size="icon" onClick={logout} title="تسجيل الخروج">
-                <LogOut className="h-5 w-5" />
-               </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal text-right">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/profile">
+                    <UserIcon className="ms-2 h-4 w-4" />
+                    <span>الملف الشخصي</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut className="ms-2 h-4 w-4" />
+                  <span>تسجيل الخروج</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <div className="md:hidden">
             <Sheet>

@@ -17,15 +17,24 @@ export interface User {
 interface UsersContextType {
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  updateUser: (id: string, updatedUser: Partial<User>) => void;
 }
 
 export const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [users, setUsers] = useLocalStorage<User[]>('users', []);
+  
+  const updateUser = (id: string, updatedUser: Partial<User>) => {
+    setUsers(prevUsers => 
+        prevUsers.map(user => 
+            user.id === id ? { ...user, ...updatedUser } : user
+        )
+    );
+  };
 
   return (
-    <UsersContext.Provider value={{ users, setUsers }}>
+    <UsersContext.Provider value={{ users, setUsers, updateUser }}>
       {children}
     </UsersContext.Provider>
   );

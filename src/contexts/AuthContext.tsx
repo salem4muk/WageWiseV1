@@ -12,12 +12,14 @@ export interface User {
   name: string;
   roles?: Role[];
   permissions?: Permission[];
+  password?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (user: User) => void;
   logout: () => void;
+  updateUser: (user: User) => void;
   loading: boolean;
   hasPermission: (permission: Permission) => boolean;
   hasRole: (role: Role) => boolean;
@@ -38,11 +40,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (userData: User) => {
     let permissions: Permission[] = userData.permissions || [];
     if (userData.roles?.includes('supervisor')) {
-        // Supervisors can manage everything except other users.
         permissions = ['create', 'update', 'delete', 'view_reports'];
     }
     setUser({ ...userData, permissions });
   };
+  
+  const updateUser = (userData: User) => {
+    setUser(userData);
+  }
 
   const logout = () => {
     setUser(null);
@@ -71,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, hasPermission, hasRole }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading, hasPermission, hasRole }}>
       {children}
     </AuthContext.Provider>
   );
