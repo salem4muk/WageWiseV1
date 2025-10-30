@@ -11,6 +11,7 @@ import PrivateRoute from '@/components/auth/PrivateRoute';
 import { UsersProvider } from '@/contexts/UsersContext';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
+import FirebaseClientProvider from '@/firebase/client-provider';
 
 // This can't be set dynamically for a client component layout root.
 // We are setting it here as a static object.
@@ -59,16 +60,18 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-          <UsersProvider>
-            <PrivateRoute>
-              <AppLayout>
-                {children}
-              </AppLayout>
-              <Toaster />
-            </PrivateRoute>
-          </UsersProvider>
-        </AuthProvider>
+        <FirebaseClientProvider>
+          <AuthProvider>
+            <UsersProvider>
+              <PrivateRoute>
+                <AppLayout>
+                  {children}
+                </AppLayout>
+                <Toaster />
+              </PrivateRoute>
+            </UsersProvider>
+          </AuthProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

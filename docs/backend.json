@@ -1,0 +1,147 @@
+
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's name."
+        },
+        "roles": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["admin", "supervisor", "user"]
+            }
+        },
+        "permissions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["create", "update", "delete", "view_reports"]
+            }
+        }
+      },
+      "required": ["uid", "email", "name"]
+    },
+    "employee": {
+      "title": "Employee",
+      "description": "An employee of the company.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The employee's name."
+        },
+        "employeeId": {
+          "type": "string",
+          "description": "The user-provided employee ID."
+        },
+        "department": {
+          "type": "string",
+          "description": "The department the employee works in."
+        }
+      },
+      "required": ["name", "employeeId", "department"]
+    },
+    "productionLog": {
+      "title": "Production Log",
+      "description": "A log of production for an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "type": "string",
+          "description": "The ID of the employee who did the work."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the production."
+        },
+        "count": {
+          "type": "number",
+          "description": "The number of items produced."
+        },
+        "containerSize": {
+          "type": "string",
+          "enum": ["large", "small"]
+        },
+        "processType": {
+            "type": "string",
+            "enum": ["blown", "rolled"]
+        },
+        "cost": {
+            "type": "number",
+            "description": "The calculated cost of the production."
+        }
+      },
+      "required": ["employeeId", "date", "count", "containerSize", "processType", "cost"]
+    },
+    "salaryPayment": {
+      "title": "Salary Payment",
+      "description": "A salary payment made to an employee.",
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "type": "string",
+          "description": "The ID of the employee who received the payment."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the payment."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The amount of the payment."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any notes about the payment."
+        }
+      },
+      "required": ["employeeId", "date", "amount"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/user"
+      },
+      "description": "Stores user profile information."
+    },
+    "/employees/{employeeId}": {
+        "schema": {
+            "$ref": "#/entities/employee"
+        },
+        "description": "Stores employee information."
+    },
+    "/productionLogs/{logId}": {
+        "schema": {
+            "$ref": "#/entities/productionLog"
+        },
+        "description": "Stores production logs."
+    },
+    "/salaryPayments/{paymentId}": {
+        "schema": {
+            "$ref": "#/entities/salaryPayment"
+        },
+        "description": "Stores salary payment records."
+    }
+  }
+}
