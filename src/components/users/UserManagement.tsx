@@ -91,12 +91,8 @@ export default function UserManagement() {
           variant: "destructive",
           title: "الإضافة اليدوية مطلوبة",
           description: "يرجى إنشاء هذا المستخدم في Firebase Authentication يدويًا أولاً. هذه الواجهة تدير بيانات Firestore فقط.",
+          duration: 10000,
         });
-        console.error("User creation via client is not secure. Please use a server-side function.");
-
-        // If you were to proceed (NOT RECOMMENDED):
-        // const usersCollectionRef = collection(firestore, "users");
-        // await addDoc(usersCollectionRef, values);
       }
 
       setIsDialogOpen(false);
