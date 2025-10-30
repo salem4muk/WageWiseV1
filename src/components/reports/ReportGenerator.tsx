@@ -13,7 +13,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { amiriFont } from "@/lib/amiri-font";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useCollection } from "@/firebase";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -51,6 +51,7 @@ import PaymentsReportTable from "./PaymentsReportTable";
 import EmployeeSummaryReportTable from "./EmployeeSummaryReportTable";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "../ui/skeleton";
 
 const reportSchema = z.object({
   reportType: z.enum([
@@ -73,14 +74,15 @@ export default function ReportGenerator() {
   const { hasPermission } = useAuth();
   const router = useRouter();
 
-  const [employees] = useLocalStorage<Employee[]>("employees", []);
-  const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
-  const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
+  const { data: employees, loading: eLoading } = useCollection<Employee>("employees");
+  const { data: productionLogs, loading: pLoading } = useCollection<ProductionLog>("productionLogs");
+  const { data: salaryPayments, loading: sLoading } = useCollection<SalaryPayment>("salaryPayments");
 
   const [reportData, setReportData] = useState<any[] | null>(null);
   const [activeReportType, setActiveReportType] = useState<string | null>(null);
   const [activeReportMetadata, setActiveReportMetadata] = useState<any>(null);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+
+  const isLoading = eLoading || pLoading || sLoading;
 
   useEffect(() => {
     if (!hasPermission('view_reports')) {
@@ -101,6 +103,7 @@ export default function ReportGenerator() {
   };
 
   const filterByDateRange = (items: (ProductionLog | SalaryPayment)[], dateRange: DateRange) => {
+    if(!dateRange || !dateRange.from || !dateRange.to) return items;
     const from = dateRange.from!;
     const to = dateRange.to!;
     to.setHours(23, 59, 59, 999); // Include the whole end day
@@ -111,6 +114,8 @@ export default function ReportGenerator() {
   };
   
   const onSubmit = (values: ReportFormValues) => {
+    if (!productionLogs || !salaryPayments || !employees) return;
+
     let data;
     const { employeeId, dateRange, reportType } = values;
 
@@ -133,8 +138,6 @@ export default function ReportGenerator() {
         const targetEmployees = (employeeId && employeeId !== 'all') 
           ? employees.filter(e => e.id === employeeId) 
           : employees;
-          
-        setFilteredEmployees(targetEmployees);
 
         const reportMap = new Map<string, { totalProductionCost: number, productionCount: number }>();
         filteredLogs.forEach(log => {
@@ -164,9 +167,7 @@ export default function ReportGenerator() {
       default:
         data = [];
     }
-    if (values.reportType !== 'employee_summary') {
-        setFilteredEmployees(employees);
-    }
+    
     setReportData(data);
     setActiveReportType(values.reportType);
     setActiveReportMetadata({
@@ -177,7 +178,7 @@ export default function ReportGenerator() {
   };
 
   const handleExport = () => {
-    if (!reportData || !activeReportType || !activeReportMetadata) return;
+    if (!reportData || !activeReportType || !activeReportMetadata || !employees) return;
 
     const { dateRange, employeeId, reportType } = activeReportMetadata;
     const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
@@ -235,7 +236,7 @@ export default function ReportGenerator() {
   };
 
   const handleExportPdf = () => {
-    if (!reportData || !activeReportType || !activeReportMetadata) return;
+    if (!reportData || !activeReportType || !activeReportMetadata || !employees) return;
 
     const doc = new jsPDF();
 
@@ -334,6 +335,7 @@ export default function ReportGenerator() {
     if (!reportData) {
       return null;
     }
+     if (!employees) return;
 
     switch (activeReportType) {
       case 'production':
@@ -349,6 +351,27 @@ export default function ReportGenerator() {
 
   if (!hasPermission('view_reports')) {
     return null; // or a loading/access denied component
+  }
+  
+  if (isLoading) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 md:p-8">
+            <Skeleton className="h-10 w-64 mb-2" />
+            <Skeleton className="h-5 w-80 mb-6" />
+            <Card className="mb-8">
+                <CardHeader>
+                    <Skeleton className="h-8 w-48 mb-2" />
+                    <Skeleton className="h-5 w-72" />
+                </CardHeader>
+                <CardContent className="space-y-8">
+                    <div className="space-y-2"><Skeleton className="h-5 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-5 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <div className="space-y-2"><Skeleton className="h-5 w-24" /><Skeleton className="h-10 w-full" /></div>
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    )
   }
 
   return (
@@ -414,7 +437,7 @@ export default function ReportGenerator() {
                     </FormControl>
                     <SelectContent>
                        <SelectItem value="all">جميع الموظفين</SelectItem>
-                       {employees.map(emp => (
+                       {(employees || []).map(emp => (
                            <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
                        ))}
                     </SelectContent>

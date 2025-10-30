@@ -2,7 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import type { Employee } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,9 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 import EmployeeForm from "./EmployeeForm";
 import EmployeeList from "./EmployeeList";
 import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "../ui/skeleton";
 
 export function EmployeeManagement() {
-  const [employees, setEmployees] = useLocalStorage<Employee[]>("employees", []);
+  const firestore = useFirestore();
+  const { data: employees, loading } = useCollection<Employee>("employees");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>(undefined);
   const { toast } = useToast();
@@ -31,31 +34,35 @@ export function EmployeeManagement() {
   const canUpdate = hasPermission('update');
   const canDelete = hasPermission('delete');
 
-  const handleFormSubmit = (values: any) => {
-    if (editingEmployee) {
-      if (!canUpdate) return;
-      const updatedEmployees = employees.map((emp) =>
-        emp.id === editingEmployee.id ? { ...editingEmployee, ...values } : emp
-      );
-      setEmployees(updatedEmployees);
+  const handleFormSubmit = async (values: any) => {
+    try {
+      if (editingEmployee) {
+        if (!canUpdate) return;
+        const employeeDocRef = doc(firestore, "employees", editingEmployee.id);
+        await updateDoc(employeeDocRef, values);
+        toast({
+          title: "تم التعديل بنجاح",
+          description: `تم تحديث بيانات الموظف ${values.name}.`,
+        });
+      } else {
+        if (!canCreate) return;
+        const employeesCollectionRef = collection(firestore, "employees");
+        await addDoc(employeesCollectionRef, values);
+        toast({
+          title: "تم بنجاح",
+          description: `تمت إضافة الموظف ${values.name} بنجاح.`,
+        });
+      }
+      setIsDialogOpen(false);
+      setEditingEmployee(undefined);
+    } catch (error) {
+      console.error("Error saving employee:", error);
       toast({
-        title: "تم التعديل بنجاح",
-        description: `تم تحديث بيانات الموظف ${values.name}.`,
-      });
-    } else {
-      if (!canCreate) return;
-      const newEmployee: Employee = {
-        id: crypto.randomUUID(),
-        ...values,
-      };
-      setEmployees((prev) => [...prev, newEmployee]);
-      toast({
-        title: "تم بنجاح",
-        description: `تمت إضافة الموظف ${values.name} بنجاح.`,
+        variant: "destructive",
+        title: "حدث خطأ",
+        description: "لم نتمكن من حفظ بيانات الموظف.",
       });
     }
-    setIsDialogOpen(false);
-    setEditingEmployee(undefined);
   };
   
   const handleEdit = (employee: Employee) => {
@@ -64,14 +71,24 @@ export function EmployeeManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (employeeId: string) => {
+  const handleDelete = async (employeeId: string) => {
     if (!canDelete) return;
-    setEmployees((prev) => prev.filter((emp) => emp.id !== employeeId));
-    toast({
-      variant: "destructive",
-      title: "تم الحذف",
-      description: "تم حذف الموظف.",
-    });
+    try {
+      const employeeDocRef = doc(firestore, "employees", employeeId);
+      await deleteDoc(employeeDocRef);
+      toast({
+        variant: "destructive",
+        title: "تم الحذف",
+        description: "تم حذف الموظف.",
+      });
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      toast({
+        variant: "destructive",
+        title: "حدث خطأ",
+        description: "لم نتمكن من حذف الموظف.",
+      });
+    }
   };
 
   const openDialogForNew = () => {
@@ -127,13 +144,21 @@ export function EmployeeManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmployeeList
-            employees={employees}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-          />
+          {loading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <EmployeeList
+              employees={employees || []}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
+            />
+          )}
         </CardContent>
       </Card>
     </div>

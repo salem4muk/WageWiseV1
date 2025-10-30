@@ -6,6 +6,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useAuth } from '@/hooks/use-auth';
 import type { Permission, Role } from './AuthContext';
+import { AuthProvider } from './AuthContext';
 
 // This is the user type for the list of all users, not the authenticated user
 export interface User {
@@ -20,10 +21,10 @@ export interface User {
 interface UsersContextType {
   users: User[];
   loading: boolean;
-  // setUsers is no longer exposed, mutations happen via Firestore
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>; // Keeping setUsers for now for local updates if needed
 }
 
-export const UsersContext = createContext<UsersContextType | undefined>(undefined);
+const UsersContext = createContext<UsersContextType | undefined>(undefined);
 
 export const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const [users, setUsers] = useState<User[]>([]);
@@ -32,7 +33,7 @@ export const UsersProvider = ({ children }: { children: React.ReactNode }) => {
   const { user: authUser } = useAuth(); // For checking admin role
 
   useEffect(() => {
-    if (!authUser || !authUser.roles?.includes('admin')) {
+    if (!firestore ||!authUser || !authUser.roles?.includes('admin')) {
       setUsers([]);
       setLoading(false);
       return;
@@ -54,10 +55,8 @@ export const UsersProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, [firestore, authUser]);
 
-  // updateUser and setUsers are removed as Firestore is the source of truth now.
-  // Direct interaction will be done in the components via Firestore functions.
   return (
-    <UsersContext.Provider value={{ users, loading }}>
+    <UsersContext.Provider value={{ users, loading, setUsers }}>
       {children}
     </UsersContext.Provider>
   );
@@ -70,3 +69,14 @@ export const useUsers = () => {
   }
   return context;
 };
+
+// We need to wrap the UsersProvider in the AuthProvider to access the authUser
+export const AppUsersProvider = ({ children }: { children: React.ReactNode }) => {
+    return (
+        <AuthProvider>
+            <UsersProvider>
+                {children}
+            </UsersProvider>
+        </AuthProvider>
+    )
+}

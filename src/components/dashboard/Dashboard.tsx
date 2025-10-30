@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useCollection } from "@/firebase";
 import type { Employee, ProductionLog } from "@/lib/types";
 import SummaryCards from "./SummaryCards";
 import ProductionTable from "./ProductionTable";
@@ -9,16 +9,36 @@ import { Button } from "../ui/button";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "../ui/skeleton";
 
 export default function Dashboard() {
-  const [employees] = useLocalStorage<Employee[]>("employees", []);
-  const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
+  const { data: employees, loading: employeesLoading } = useCollection<Employee>("employees");
+  const { data: productionLogs, loading: logsLoading } = useCollection<ProductionLog>("productionLogs");
   const { hasPermission } = useAuth();
   const canCreate = hasPermission('create');
 
-  const totalCost = productionLogs.reduce((acc, log) => acc + log.cost, 0);
-  const totalEmployees = employees.length;
-  const totalProductionEntries = productionLogs.length;
+  const isLoading = employeesLoading || logsLoading;
+
+  const totalCost = productionLogs?.reduce((acc, log) => acc + log.cost, 0) || 0;
+  const totalEmployees = employees?.length || 0;
+  const totalProductionEntries = productionLogs?.length || 0;
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
@@ -42,8 +62,8 @@ export default function Dashboard() {
       />
       <div className="mt-8">
         <ProductionTable
-          productionLogs={productionLogs}
-          employees={employees}
+          productionLogs={productionLogs || []}
+          employees={employees || []}
         />
       </div>
     </div>

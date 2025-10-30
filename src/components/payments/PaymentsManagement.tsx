@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useState } from "react";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import type { Employee, SalaryPayment } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -20,51 +20,56 @@ import { useToast } from "@/hooks/use-toast";
 import PaymentForm from "./PaymentForm";
 import PaymentsList from "./PaymentsList";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+import { Skeleton } from "../ui/skeleton";
 
 export default function PaymentsManagement() {
-  const [employees] = useLocalStorage<Employee[]>("employees", []);
-  const [payments, setPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
+  const firestore = useFirestore();
+  const { data: employees, loading: employeesLoading } = useCollection<Employee>("employees");
+  const { data: payments, loading: paymentsLoading } = useCollection<SalaryPayment>("salaryPayments");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<SalaryPayment | undefined>(undefined);
   const { toast } = useToast();
   const { hasPermission } = useAuth();
-  const router = useRouter();
 
   const canCreate = hasPermission('create');
   const canUpdate = hasPermission('update');
   const canDelete = hasPermission('delete');
+  const isLoading = employeesLoading || paymentsLoading;
 
-  const handleFormSubmit = (values: any) => {
-    const date = values.date.toISOString();
-
-    if (editingPayment) {
-      if (!canUpdate) return;
-      // Update existing payment
-      const updatedPayments = payments.map((p) =>
-        p.id === editingPayment.id ? { ...p, ...values, date } : p
-      );
-      setPayments(updatedPayments);
-      toast({
-        title: "تم التعديل بنجاح",
-        description: "تم تحديث سند الصرف.",
-      });
-    } else {
-      if (!canCreate) return;
-      // Add new payment
-      const newPayment: SalaryPayment = {
-        id: crypto.randomUUID(),
+  const handleFormSubmit = async (values: any) => {
+    const paymentData = {
         ...values,
-        date,
-      };
-      setPayments((prev) => [...prev, newPayment]);
-      toast({
-        title: "تم الحفظ بنجاح",
-        description: "تم تسجيل سند الصرف الجديد.",
-      });
+        date: values.date.toISOString(),
+    };
+
+    try {
+        if (editingPayment) {
+        if (!canUpdate) return;
+        const paymentDocRef = doc(firestore, "salaryPayments", editingPayment.id);
+        await updateDoc(paymentDocRef, paymentData);
+        toast({
+            title: "تم التعديل بنجاح",
+            description: "تم تحديث سند الصرف.",
+        });
+        } else {
+        if (!canCreate) return;
+        const paymentsCollectionRef = collection(firestore, "salaryPayments");
+        await addDoc(paymentsCollectionRef, paymentData);
+        toast({
+            title: "تم الحفظ بنجاح",
+            description: "تم تسجيل سند الصرف الجديد.",
+        });
+        }
+        setIsDialogOpen(false);
+        setEditingPayment(undefined);
+    } catch (error) {
+        console.error("Error saving payment:", error);
+        toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: "لم نتمكن من حفظ سند الصرف.",
+        });
     }
-    setIsDialogOpen(false);
-    setEditingPayment(undefined);
   };
 
   const handleEdit = (payment: SalaryPayment) => {
@@ -73,14 +78,24 @@ export default function PaymentsManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (paymentId: string) => {
+  const handleDelete = async (paymentId: string) => {
     if (!canDelete) return;
-    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
-    toast({
-      variant: "destructive",
-      title: "تم الحذف",
-      description: "تم حذف سند الصرف.",
-    });
+    try {
+        const paymentDocRef = doc(firestore, "salaryPayments", paymentId);
+        await deleteDoc(paymentDocRef);
+        toast({
+            variant: "destructive",
+            title: "تم الحذف",
+            description: "تم حذف سند الصرف.",
+        });
+    } catch (error) {
+        console.error("Error deleting payment:", error);
+        toast({
+            variant: "destructive",
+            title: "حدث خطأ",
+            description: "لم نتمكن من حذف سند الصرف.",
+        });
+    }
   };
 
   const openDialogForNew = () => {
@@ -119,7 +134,7 @@ export default function PaymentsManagement() {
               </DialogHeader>
               <div className="py-4">
                 <PaymentForm
-                  employees={employees}
+                  employees={employees || []}
                   onSubmit={handleFormSubmit}
                   initialData={editingPayment}
                 />
@@ -137,14 +152,22 @@ export default function PaymentsManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <PaymentsList
-            payments={payments}
-            employees={employees}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-          />
+          {isLoading ? (
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+           ) : (
+            <PaymentsList
+                payments={payments || []}
+                employees={employees || []}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canUpdate={canUpdate}
+                canDelete={canDelete}
+            />
+           )}
         </CardContent>
       </Card>
     </div>

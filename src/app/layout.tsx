@@ -1,26 +1,17 @@
 
 "use client";
 
-import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { useAuth as useAppAuth } from '@/hooks/use-auth';
+import { UsersProvider } from '@/contexts/UsersContext';
 import PrivateRoute from '@/components/auth/PrivateRoute';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import FirebaseClientProvider from '@/firebase/client-provider';
 
-// This can't be set dynamically for a client component layout root.
-// We are setting it here as a static object.
-// export const metadata: Metadata = {
-//   title: 'WageWise',
-//   description: 'Employee production and salary management',
-// };
-
 const AppLayout = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAppAuth();
   const pathname = usePathname();
 
   if (pathname === '/login') {
@@ -61,12 +52,14 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AuthProvider>
-            <PrivateRoute>
-              <AppLayout>
-                {children}
-              </AppLayout>
-              <Toaster />
-            </PrivateRoute>
+            <UsersProvider>
+              <PrivateRoute>
+                <AppLayout>
+                  {children}
+                </AppLayout>
+                <Toaster />
+              </PrivateRoute>
+            </UsersProvider>
           </AuthProvider>
         </FirebaseClientProvider>
       </body>

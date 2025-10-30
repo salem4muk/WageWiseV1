@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useState } from "react";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import type { Employee, ProductionLog } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,20 +20,22 @@ import { useToast } from "@/hooks/use-toast";
 import ProductionForm from "./ProductionForm";
 import ProductionList from "./ProductionList";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+import { Skeleton } from "../ui/skeleton";
 
 export default function ProductionManagement() {
-  const [employees] = useLocalStorage<Employee[]>("employees", []);
-  const [productionLogs, setProductionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
+  const firestore = useFirestore();
+  const { data: employees, loading: employeesLoading } = useCollection<Employee>("employees");
+  const { data: productionLogs, loading: logsLoading } = useCollection<ProductionLog>("productionLogs");
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLog, setEditingLog] = useState<ProductionLog | undefined>(undefined);
   const { toast } = useToast();
   const { hasPermission } = useAuth();
-  const router = useRouter();
-
+  
   const canCreate = hasPermission('create');
   const canUpdate = hasPermission('update');
   const canDelete = hasPermission('delete');
+  const isLoading = employeesLoading || logsLoading;
 
   const calculateCost = (values: any): number => {
     const { count, containerSize, processType } = values;
@@ -45,35 +48,41 @@ export default function ProductionManagement() {
     return 0;
   };
 
-  const handleFormSubmit = (values: any) => {
-    const date = values.date.toISOString();
-
-    if (editingLog) {
-      if (!canUpdate) return;
-      const updatedLogs = productionLogs.map((log) =>
-        log.id === editingLog.id ? { ...log, ...values, date, cost: calculateCost(values) } : log
-      );
-      setProductionLogs(updatedLogs);
+  const handleFormSubmit = async (values: any) => {
+     const logData = {
+      ...values,
+      date: values.date.toISOString(),
+      cost: calculateCost(values),
+    };
+    
+    try {
+      if (editingLog) {
+        if (!canUpdate) return;
+        const logDocRef = doc(firestore, "productionLogs", editingLog.id);
+        await updateDoc(logDocRef, logData);
+        toast({
+          title: "تم التعديل بنجاح",
+          description: "تم تحديث سجل الإنتاج.",
+        });
+      } else {
+        if (!canCreate) return;
+        const logsCollectionRef = collection(firestore, "productionLogs");
+        await addDoc(logsCollectionRef, logData);
+        toast({
+          title: "تم الحفظ بنجاح",
+          description: "تم تسجيل عملية الإنتاج الجديدة.",
+        });
+      }
+      setIsDialogOpen(false);
+      setEditingLog(undefined);
+    } catch (error) {
+      console.error("Error saving production log:", error);
       toast({
-        title: "تم التعديل بنجاح",
-        description: "تم تحديث سجل الإنتاج.",
-      });
-    } else {
-      if (!canCreate) return;
-      const newLog: ProductionLog = {
-        id: crypto.randomUUID(),
-        ...values,
-        date,
-        cost: calculateCost(values),
-      };
-      setProductionLogs((prev) => [...prev, newLog]);
-      toast({
-        title: "تم الحفظ بنجاح",
-        description: "تم تسجيل عملية الإنتاج الجديدة.",
+        variant: "destructive",
+        title: "حدث خطأ",
+        description: "لم نتمكن من حفظ سجل الإنتاج.",
       });
     }
-    setIsDialogOpen(false);
-    setEditingLog(undefined);
   };
 
   const handleEdit = (log: ProductionLog) => {
@@ -82,14 +91,24 @@ export default function ProductionManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (logId: string) => {
+  const handleDelete = async (logId: string) => {
     if (!canDelete) return;
-    setProductionLogs((prev) => prev.filter((p) => p.id !== logId));
-    toast({
-      variant: "destructive",
-      title: "تم الحذف",
-      description: "تم حذف سجل الإنتاج.",
-    });
+    try {
+      const logDocRef = doc(firestore, "productionLogs", logId);
+      await deleteDoc(logDocRef);
+      toast({
+        variant: "destructive",
+        title: "تم الحذف",
+        description: "تم حذف سجل الإنتاج.",
+      });
+    } catch (error) {
+      console.error("Error deleting production log:", error);
+      toast({
+        variant: "destructive",
+        title: "حدث خطأ",
+        description: "لم نتمكن من حذف سجل الإنتاج.",
+      });
+    }
   };
 
   const openDialogForNew = () => {
@@ -128,7 +147,7 @@ export default function ProductionManagement() {
               </DialogHeader>
               <div className="py-4">
                 <ProductionForm
-                  employees={employees}
+                  employees={employees || []}
                   onSubmit={handleFormSubmit}
                   initialData={editingLog}
                 />
@@ -146,14 +165,22 @@ export default function ProductionManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ProductionList
-            productionLogs={productionLogs}
-            employees={employees}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            canUpdate={canUpdate}
-            canDelete={canDelete}
-          />
+          {isLoading ? (
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+           ) : (
+            <ProductionList
+                productionLogs={productionLogs || []}
+                employees={employees || []}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canUpdate={canUpdate}
+                canDelete={canDelete}
+            />
+           )}
         </CardContent>
       </Card>
     </div>

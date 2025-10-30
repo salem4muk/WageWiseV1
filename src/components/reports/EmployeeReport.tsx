@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useCollection } from "@/firebase";
 import type { Employee, ProductionLog, SalaryPayment } from "@/lib/types";
 import {
   Table,
@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { downloadAsTextFile } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 interface EmployeeReportData {
   employee: Employee;
@@ -32,9 +33,10 @@ export default function EmployeeReport() {
   const { hasPermission } = useAuth();
   const router = useRouter();
 
-  const [employees] = useLocalStorage<Employee[]>("employees", []);
-  const [productionLogs] = useLocalStorage<ProductionLog[]>("productionLogs", []);
-  const [salaryPayments] = useLocalStorage<SalaryPayment[]>("salaryPayments", []);
+  const { data: employees, loading: eLoading } = useCollection<Employee>("employees");
+  const { data: productionLogs, loading: pLoading } = useCollection<ProductionLog>("productionLogs");
+  const { data: salaryPayments, loading: sLoading } = useCollection<SalaryPayment>("salaryPayments");
+  const isLoading = eLoading || pLoading || sLoading;
 
   useEffect(() => {
     if (!hasPermission('view_reports')) {
@@ -43,6 +45,8 @@ export default function EmployeeReport() {
   }, [hasPermission, router]);
 
   const employeeReportData: EmployeeReportData[] = useMemo(() => {
+    if (!employees || !productionLogs || !salaryPayments) return [];
+
     const reportMap = new Map<string, { totalProductionCost: number; productionCount: number }>();
     const paymentsMap = new Map<string, number>();
 
@@ -102,7 +106,22 @@ export default function EmployeeReport() {
   const totalNetSalaries = employeeReportData.reduce((sum, data) => sum + data.netSalary, 0);
 
   if (!hasPermission('view_reports')) {
-    return null; // or a loading/access denied component
+    return null; 
+  }
+
+  if (isLoading) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 md:p-8">
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <Skeleton className="h-10 w-72 mb-2" />
+                    <Skeleton className="h-5 w-96" />
+                </div>
+                <Skeleton className="h-10 w-36" />
+            </div>
+            <Skeleton className="h-[400px] w-full" />
+        </div>
+    )
   }
 
   return (
