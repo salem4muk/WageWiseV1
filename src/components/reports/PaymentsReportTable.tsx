@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Employee, SalaryPayment } from "@/lib/types";
@@ -23,11 +24,10 @@ export default function PaymentsReportTable({ payments, employees }: PaymentsRep
   const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
       minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
   
   const sortedPayments = [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

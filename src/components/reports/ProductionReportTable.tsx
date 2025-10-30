@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -23,11 +24,10 @@ const ProductionReportTable = ({ productionLogs, employees }: ProductionReportTa
   const employeeMap = new Map(employees.map((emp) => [emp.id, emp.name]));
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
       minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
   
   const sortedLogs = [...productionLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

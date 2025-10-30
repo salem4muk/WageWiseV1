@@ -78,11 +78,10 @@ export default function EmployeeReport() {
   }, [employees, productionLogs, salaryPayments]);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
       minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
 
   const handleExport = () => {
@@ -125,7 +124,7 @@ export default function EmployeeReport() {
   }
 
   return (
-    <div>
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
       <div className="flex justify-between items-start mb-6">
         <div>
             <h1 className="text-3xl font-headline font-bold text-foreground">

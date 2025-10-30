@@ -95,11 +95,10 @@ export default function ReportGenerator() {
   });
   
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
       minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
 
   const filterByDateRange = (items: (ProductionLog | SalaryPayment)[], dateRange: DateRange) => {
@@ -375,7 +374,7 @@ export default function ReportGenerator() {
   }
 
   return (
-    <div>
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
        <div className="mb-6">
         <h1 className="text-3xl font-headline font-bold text-foreground">
           منشئ التقارير
