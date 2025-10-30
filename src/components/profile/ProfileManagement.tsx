@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuth as useFirebaseAuth, useFirestore } from '@/firebase';
-import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { updateEmail, updatePassword } from 'firebase/auth';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileForm, { ProfileFormValues } from './ProfileForm';
 import { useToast } from '@/hooks/use-toast';
@@ -31,21 +31,35 @@ export default function ProfileManagement() {
     }
 
     try {
+        const userDocRef = doc(firestore, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        const dataToSave: { name?: string; email?: string } = {};
+
         // 1. Update Name in Firestore
         if (values.name && values.name !== authUser.name) {
-            const userDocRef = doc(firestore, 'users', currentUser.uid);
-            await updateDoc(userDocRef, { name: values.name });
+            dataToSave.name = values.name;
         }
 
         // 2. Update Email in Firebase Auth
         if (values.email && values.email !== authUser.email) {
-            // Reauthentication might be required for security-sensitive operations
-            // This is a simplified example. A real app would prompt for current password.
             await updateEmail(currentUser, values.email);
-            // Also update it in Firestore if you store it there
-            const userDocRef = doc(firestore, 'users', currentUser.uid);
-             await updateDoc(userDocRef, { email: values.email });
+            dataToSave.email = values.email;
         }
+        
+        // Save name and email changes to Firestore
+        if (Object.keys(dataToSave).length > 0) {
+            if (userDocSnap.exists()) {
+                await updateDoc(userDocRef, dataToSave);
+            } else {
+                // If doc doesn't exist, create it. Add existing user data too.
+                await setDoc(userDocRef, { 
+                    ...authUser,
+                    ...dataToSave 
+                });
+            }
+        }
+
 
         // 3. Update Password in Firebase Auth
         if (values.password) {
@@ -54,7 +68,7 @@ export default function ProfileManagement() {
 
         toast({
             title: 'تم التحديث بنجاح',
-            description: 'تم تحديث بيانات ملفك الشخصي. قد تحتاج إلى تسجيل الدخول مرة أخرى.',
+            description: 'تم تحديث بيانات ملفك الشخصي. قد تحتاج إلى تسجيل الدخول مرة أخرى لرؤية كل التغييرات.',
         });
 
     } catch (error: any) {
