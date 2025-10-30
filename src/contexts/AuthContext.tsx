@@ -23,7 +23,6 @@ interface AuthContextType {
   loading: boolean;
   hasPermission: (permission: Permission) => boolean;
   hasRole: (role: Role) => boolean;
-  // No login/updateUser needed here, it's handled by Firebase directly
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,8 +55,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             name: firebaseUser.displayName,
-            roles: [],
-            permissions: [],
+            roles: [], // Default to no roles
+            permissions: [], // Default to no permissions
           });
         }
       } else {
@@ -79,12 +78,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) {
       return false;
     }
+    // Admin has all permissions
     if (user.roles?.includes('admin')) {
       return true;
     }
+    // Supervisor has most permissions
     if (user.roles?.includes('supervisor')) {
         return ['create', 'update', 'delete', 'view_reports'].includes(permission);
     }
+    // Regular user's permissions are checked individually
     if (!user.permissions) {
       return false;
     }

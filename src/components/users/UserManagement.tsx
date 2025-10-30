@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useCollection, useFirestore } from "@/firebase";
-import { collection, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,7 +29,7 @@ import { User } from '@/contexts/UsersContext';
 // to create the Auth user and the Firestore document transactionally.
 
 export default function UserManagement() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const firestore = useFirestore();
   const { data: users, loading } = useCollection<User>('users');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,19 +37,44 @@ export default function UserManagement() {
   const { toast } = useToast();
   const router = useRouter();
 
+  const isUserAdmin = hasRole('admin');
+
   useEffect(() => {
-    if (!user?.roles?.includes('admin')) {
+    if (!loading && !isUserAdmin) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, loading, isUserAdmin, router]);
 
-  if (!user?.roles?.includes('admin')) {
-    return null; // or a loading/access denied component
+  if (!isUserAdmin) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 md:p-8">
+            <Skeleton className="h-10 w-64 mb-6" />
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-48" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   const handleFormSubmit = async (values: Omit<User, 'id'> & { id?: string }) => {
     try {
       if (editingUser) {
+        // Prevent self-demotion
+        if (editingUser.id === user?.uid && !values.roles?.includes('admin')) {
+             toast({
+                variant: "destructive",
+                title: "غير مسموح",
+                description: "لا يمكنك إزالة دور المسؤول من حسابك.",
+            });
+            return;
+        }
         // Update user in Firestore
         const userDocRef = doc(firestore, 'users', editingUser.id);
         await updateDoc(userDocRef, values as any);
@@ -94,6 +119,10 @@ export default function UserManagement() {
   const handleDelete = async (userId: string) => {
      // In a real app, you would call a Firebase Function here to delete the Auth user and the Firestore doc.
     try {
+        if (userId === user?.uid) {
+            toast({ variant: 'destructive', title: 'غير مسموح', description: 'لا يمكنك حذف حسابك الخاص.' });
+            return;
+        }
         const userDocRef = doc(firestore, "users", userId);
         await deleteDoc(userDocRef);
         toast({

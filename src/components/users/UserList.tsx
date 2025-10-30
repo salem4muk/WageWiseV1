@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "../ui/badge";
 import type { Permission, Role } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 
 interface UserListProps {
   users: User[];
@@ -46,6 +47,8 @@ const roleLabels: Record<Role, string> = {
 };
 
 export default function UserList({ users, onEdit, onDelete }: UserListProps) {
+  const { user: currentUser } = useAuth();
+  
   return (
     <Table>
       <TableHeader>
@@ -64,21 +67,29 @@ export default function UserList({ users, onEdit, onDelete }: UserListProps) {
               <TableCell className="text-center font-medium">{user.name}</TableCell>
               <TableCell className="text-center">{user.email}</TableCell>
               <TableCell className="text-center">
-                 {user.roles?.map(r => <Badge key={r}>{roleLabels[r]}</Badge>)}
+                 <div className="flex gap-1 justify-center flex-wrap">
+                    {user.roles?.sort().map(r => <Badge key={r} variant={r === 'admin' ? 'destructive' : 'default'}>{roleLabels[r]}</Badge>)}
+                 </div>
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-1 justify-center flex-wrap">
-                    {user.permissions?.map(p => <Badge key={p} variant="secondary">{permissionLabels[p]}</Badge>)}
+                    {user.roles?.includes('supervisor') ? (
+                        <Badge variant="secondary">كل صلاحيات المشرف</Badge>
+                    ) : user.roles?.includes('admin') ? (
+                        <Badge variant="secondary">كافة الصلاحيات</Badge>
+                    ) : (
+                        user.permissions?.map(p => <Badge key={p} variant="secondary">{permissionLabels[p]}</Badge>)
+                    )}
                 </div>
               </TableCell>
               <TableCell className="text-center">
                 <div className="flex gap-2 justify-center">
-                  <Button variant="outline" size="icon" onClick={() => onEdit(user)}>
+                  <Button variant="outline" size="icon" onClick={() => onEdit(user)} disabled={user.id === currentUser?.uid}>
                     <Edit className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon" disabled={user.roles?.includes('admin')}>
+                      <Button variant="destructive" size="icon" disabled={user.roles?.includes('admin') || user.id === currentUser?.uid}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>

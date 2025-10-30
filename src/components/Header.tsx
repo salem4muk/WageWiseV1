@@ -57,7 +57,7 @@ export default function Header() {
   ];
 
   const adminNavItems = [
-    { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/>, permission: user?.roles?.includes('admin') },
+    { href: "/users", label: "إدارة المستخدمين", icon: <Shield className="ms-2 h-4 w-4"/>, permission: hasRole('admin') },
   ];
 
   const visibleNavItems = navItems.filter(item => item.permission);

@@ -33,7 +33,7 @@ const userSchema = z.object({
   name: z.string().min(2, { message: "يجب أن يكون الاسم حرفين على الأقل." }),
   email: z.string().email({ message: "بريد إلكتروني غير صالح." }),
   password: z.string().optional(),
-  role: z.enum(["user", "supervisor"], { required_error: "يجب اختيار دور للمستخدم."}),
+  role: z.enum(["user", "supervisor", "admin"], { required_error: "يجب اختيار دور للمستخدم."}),
   permissions: z.array(z.string()),
 }).superRefine((data, ctx) => {
     if (data.role === 'user' && data.permissions.length === 0) {
@@ -64,13 +64,15 @@ export default function UserForm({ onSubmit, initialData }: UserFormProps) {
     },
   });
 
+  const isEditingAdmin = initialData?.roles?.includes('admin');
+
   useEffect(() => {
     if (initialData) {
       form.reset({
         name: initialData.name,
         email: initialData.email,
         password: '', // Don't show existing password
-        role: initialData.roles?.find(r => r === 'supervisor' || r === 'user') || 'user',
+        role: initialData.roles?.find(r => r === 'admin' || r === 'supervisor' || r === 'user') || 'user',
         permissions: initialData.permissions || [],
       });
     } else {
@@ -103,6 +105,11 @@ export default function UserForm({ onSubmit, initialData }: UserFormProps) {
     if (role === 'supervisor') {
       permissions = ['create', 'update', 'delete', 'view_reports'];
     }
+    if (role === 'admin') {
+      permissions = []; // Admin doesn't need specific permissions, their role grants all access
+      roles.push('supervisor', 'user'); // Admin has all roles
+    }
+
 
     const finalValues: any = { ...rest, roles, permissions };
 
@@ -171,20 +178,26 @@ export default function UserForm({ onSubmit, initialData }: UserFormProps) {
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
                     <FormControl>
-                      <RadioGroupItem value="user" disabled={initialData?.roles?.includes('admin')} />
+                      <RadioGroupItem value="user" disabled={isEditingAdmin} />
                     </FormControl>
                     <FormLabel className="font-normal">مستخدم عادي</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
                     <FormControl>
-                      <RadioGroupItem value="supervisor" disabled={initialData?.roles?.includes('admin')} />
+                      <RadioGroupItem value="supervisor" disabled={isEditingAdmin} />
                     </FormControl>
                     <FormLabel className="font-normal">مشرف</FormLabel>
+                  </FormItem>
+                   <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+                    <FormControl>
+                      <RadioGroupItem value="admin" disabled={isEditingAdmin} />
+                    </FormControl>
+                    <FormLabel className="font-normal">مدير</FormLabel>
                   </FormItem>
                 </RadioGroup>
               </FormControl>
               <FormDescription>
-                المشرف لديه صلاحيات الإضافة والتعديل والحذف وعرض التقارير.
+                المدير لديه كافة الصلاحيات. المشرف لديه صلاحيات الإضافة والتعديل والحذف وعرض التقارير.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -242,10 +255,11 @@ export default function UserForm({ onSubmit, initialData }: UserFormProps) {
           />
         )}
 
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isEditingAdmin}>
             {initialData ? 'حفظ التعديلات' : 'حفظ المستخدم'}
             <Save className="me-2 h-4 w-4"/>
         </Button>
+         {isEditingAdmin && <p className="text-sm text-center text-muted-foreground">لا يمكن تعديل بيانات المدير من هنا.</p>}
       </form>
     </Form>
   );
