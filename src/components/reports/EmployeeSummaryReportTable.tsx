@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Employee } from "@/lib/types";
@@ -29,11 +30,10 @@ export default function EmployeeSummaryReportTable({ reportData }: EmployeeSumma
   const sortedData = [...reportData].sort((a, b) => b.netSalary - a.netSalary);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
       minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
   
   const totalNetSalaries = sortedData.reduce((sum, data) => sum + data.netSalary, 0);

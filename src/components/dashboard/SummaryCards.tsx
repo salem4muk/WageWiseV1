@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +12,10 @@ interface SummaryCardsProps {
 
 const SummaryCards = ({ totalCost, totalEmployees, totalProductionEntries }: SummaryCardsProps) => {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("ar-YE", {
-      style: "currency",
-      currency: "YER",
+    const formattedValue = new Intl.NumberFormat("ar-YE", {
+      minimumFractionDigits: 0,
     }).format(value);
+    return `${formattedValue} ريال`;
   };
 
   return (
